@@ -1,287 +1,656 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Split App</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Weekend Split — Minimal</title>
 
+<!-- Minimal Inter-like font (system fallback used) -->
 <style>
-body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Inter",sans-serif;background:#fafafa;color:#111;}
-header{padding:16px;font-size:22px;font-weight:600;text-align:center;border-bottom:1px solid #ddd;background:#fff;position:sticky;top:0;z-index:10;}
-.container{padding:16px;max-width:650px;margin:auto;}
-h2{margin-top:28px;font-size:18px;font-weight:600;}
-.card{background:#fff;padding:14px;margin-top:12px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.07);}
-input,select{width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid #ccc;font-size:15px;}
-button{width:100%;padding:12px;margin-top:12px;border:none;background:#111;color:#fff;border-radius:8px;font-size:15px;cursor:pointer;}
-button:active{opacity:.7;}
-.list-item{background:#f5f5f5;padding:10px;border-radius:8px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;}
-.list-item button{width:auto;background:#e74c3c;padding:6px 10px;font-size:13px;}
-.edit-btn{background:#3498db!important;margin-right:8px;}
-#summaryBox{margin-top:20px;padding:14px;background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.07);}
-#shareBtn{background:#111;width:140px;margin-top:14px;border-radius:8px;font-size:14px;padding:10px;display:flex;gap:6px;align-items:center;justify-content:center;}
-#shareBtn span{font-size:18px;margin-top:-2px;}
+  :root{
+    --bg:#f6f7f9;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --accent:#0f1724;
+    --plate:#eef0f3;
+    --success:#10b981;
+    --danger:#ef4444;
+  }
+  *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--accent);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:18px auto;padding:16px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(180deg,#fff,#f3f4f6);display:flex;align-items:center;justify-content:center;border:1px solid #e6e9ee;font-weight:700}
+  h1{margin:0;font-size:18px;font-weight:600}
+  .subtitle{font-size:13px;color:var(--muted);margin-top:2px}
+  .controls{display:flex;gap:8px;align-items:center}
+  .btn{background:var(--accent);color:#fff;border:none;padding:10px 12px;border-radius:10px;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(15,23,36,0.06)}
+  .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(14,16,20,0.04);border:1px solid rgba(15,23,36,0.03);margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:1fr 380px;gap:14px}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}.right{order:2}}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  input[type="text"], input[type="number"], select{width:100%;padding:10px;border-radius:10px;border:1px solid #e6e9ee;background:#fff;font-size:14px;outline:none}
+  .row{display:flex;gap:8px}
+  .small{font-size:13px;color:var(--muted)}
+  .people-list{display:flex;flex-wrap:wrap;gap:8px}
+  .person-chip{padding:6px 10px;background:var(--plate);border-radius:12px;font-weight:600;font-size:13px;border:1px solid rgba(15,23,36,0.03)}
+  .participant-checkbox{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;border:1px solid rgba(15,23,36,0.03);background:#fff}
+  .participant-checkbox input{margin:0}
+  .expense{display:flex;justify-content:space-between;gap:8px;padding:10px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid rgba(15,23,36,0.03);margin-bottom:8px}
+  .muted{color:var(--muted);font-size:13px}
+  .tiny{padding:6px 8px;border-radius:8px;font-size:13px}
+  .icon-btn{background:transparent;border:none;padding:6px;border-radius:8px;cursor:pointer}
+  .summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:var(--plate);margin-bottom:8px;border:1px solid rgba(15,23,36,0.03)}
+  .positive{color:var(--success);font-weight:700}
+  .negative{color:var(--danger);font-weight:700}
+  .note{font-size:13px;color:var(--muted);margin-top:8px}
+  .footer{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;margin-top:8px}
+  .list-scroll{max-height:320px;overflow:auto;padding-right:6px}
+  .select-inline{display:flex;gap:8px;align-items:center}
+  .badge{padding:6px 10px;border-radius:999px;background:#fff;border:1px solid rgba(15,23,36,0.04);font-weight:600}
+  .small-muted{font-size:12px;color:var(--muted)}
+  .center{display:flex;align-items:center;justify-content:center}
+  .share-icon{font-size:18px;padding:8px;border-radius:8px;border:1px solid rgba(15,23,36,0.03);background:#fff;cursor:pointer}
+  .category-chip{padding:6px 10px;background:#fff;border-radius:10px;border:1px solid rgba(15,23,36,0.03);font-weight:600;cursor:pointer}
+  .modal-back{position:fixed;inset:0;background:rgba(10,12,15,0.45);display:none;align-items:center;justify-content:center;z-index:60}
+  .modal{background:var(--card);padding:14px;border-radius:12px;width:min(640px,96%);box-shadow:0 20px 50px rgba(2,6,23,0.4)}
+  /* make participant checkboxes left of name in mobile-friendly chips */
+  .participant-checkbox label { display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
+  .participant-checkbox input[type="checkbox"] { width:18px; height:18px; }
 </style>
 </head>
-
 <body>
-<header>Split App</header>
-<div class="container">
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">WS</div>
+      <div>
+        <h1>Weekend Split</h1>
+        <div class="subtitle">Groups • Categories • Rounded splits • Share</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="resetAll" class="btn ghost tiny">Reset All</button>
+    </div>
+  </header>
 
-<h2>Groups</h2>
-<div class="card">
-    <input id="newGroupName" placeholder="Enter group name">
-    <button onclick="addGroup()">Add Group</button>
-    <select id="groupSelect" onchange="switchGroup()"></select>
+  <div class="card">
+    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+      <div class="select-inline">
+        <label style="margin:0 6px 0 0;font-weight:600">Group</label>
+        <select id="groupSelect"></select>
+        <button id="newGroupBtn" class="btn ghost tiny">New</button>
+        <button id="delGroupBtn" class="btn ghost tiny">Delete</button>
+      </div>
+      <div class="small-muted">All data saved locally (auto)</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <!-- People -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">People</div>
+          <div class="small-muted">Tap a name to remove</div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <input id="personName" type="text" placeholder="Add person (e.g. Ramesh)">
+          <button id="addPerson" class="btn tiny">Add</button>
+        </div>
+        <div style="margin-top:10px" id="peopleList" class="people-list"></div>
+      </div>
+
+      <!-- Categories -->
+      <div class="card" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Categories</div>
+          <div class="small-muted">Add / Remove</div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <input id="catName" type="text" placeholder="New category (eg. Food)">
+          <button id="addCat" class="btn tiny">Add</button>
+        </div>
+        <div id="catList" class="people-list" style="margin-top:10px"></div>
+      </div>
+
+      <!-- Expense form -->
+      <div class="card" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Add / Edit Expense</div>
+          <div class="small-muted">Rounded amounts only</div>
+        </div>
+
+        <div style="margin-top:10px">
+          <label>Payer</label>
+          <select id="payerSelect"></select>
+
+          <label>Amount</label>
+          <input id="amountInput" type="number" min="0" step="1" />
+
+          <label>Category</label>
+          <select id="categorySelect"></select>
+
+          <label>Participants</label>
+          <div id="participants" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"></div>
+
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button id="saveExpense" class="btn">Save</button>
+            <button id="clearExpense" class="btn ghost">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expenses list -->
+      <div class="card" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Expenses</div>
+          <div class="small-muted" id="expCount">0 items</div>
+        </div>
+        <div class="list-scroll" id="expensesList" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <div class="right">
+      <!-- Summary + share -->
+      <div class="card" id="summaryCard">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Summary</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div id="shareBtn" class="share-icon" title="Share summary">📤</div>
+            <div class="small-muted">Share as image</div>
+          </div>
+        </div>
+
+        <div id="summaryWrap" style="margin-top:12px">
+          <div class="small-muted">Category totals</div>
+          <div id="categoryTotals" style="margin-top:8px"></div>
+
+          <div style="height:8px"></div>
+
+          <div class="small-muted">Net balances</div>
+          <div id="summary" style="margin-top:8px"></div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <div style="font-weight:700">Transfer flow</div>
+          <div class="small-muted">Choose collector</div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+          <select id="transferTo" style="flex:1"></select>
+          <button id="computeTransfer" class="btn tiny">Compute</button>
+        </div>
+
+        <div id="transferResult" style="margin-top:12px"></div>
+
+        <div class="note">Logic: Debtors send amounts to the chosen person; that person forwards to creditors.</div>
+      </div>
+
+      <!-- Actions -->
+      <div class="card" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Quick Actions</div>
+          <div class="small-muted">Local only</div>
+        </div>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+          <button id="copySummary" class="btn">Copy Summary Text</button>
+        </div>
+        <div class="footer"><div>Version 1.4</div><div class="small-muted">Local only • No files</div></div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<h2>People in Group</h2>
-<div class="card">
-    <input id="newPersonName" placeholder="Enter person name">
-    <button onclick="addPerson()">Add Person</button>
-    <div id="peopleList"></div>
+<!-- Edit modal -->
+<div id="modal" class="modal-back">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:700" id="editTitle">Edit Expense</div>
+      <button id="closeModal" class="icon-btn" title="Close">✕</button>
+    </div>
+    <div style="margin-top:10px">
+      <label>Payer</label>
+      <select id="editPayer"></select>
+      <label>Amount</label>
+      <input id="editAmount" type="number" min="0" step="1" />
+      <label>Category</label>
+      <select id="editCategory"></select>
+      <label>Participants</label>
+      <div id="editParticipants" class="people-list" style="margin-top:6px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="applyEdit" class="btn">Apply</button>
+        <button id="deleteExpense" class="btn ghost">Delete</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<h2>Categories</h2>
-<div class="card">
-    <input id="newCategoryName" placeholder="Enter category name">
-    <button onclick="addCategory()">Add Category</button>
-    <div id="categoryList"></div>
-</div>
-
-<h2>Add Expense</h2>
-<div class="card">
-    <select id="payerSelect"></select>
-    <input id="amountInput" type="number" placeholder="Amount">
-
-    <label>Select participants:</label>
-    <div id="participantList"></div>
-
-    <select id="categorySelect"></select>
-    <button onclick="addExpense()">Add Expense</button>
-</div>
-
-<h2>Expenses</h2>
-<div id="expenseList"></div>
-
-<h2>Summary</h2>
-<div id="summaryBox"></div>
-
-<button id="shareBtn" onclick="shareSummary()"><span>⬆️</span> Share</button>
-
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- html2canvas for sharing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
 
 <script>
-// --------------------------------------
-// Local Storage
-// --------------------------------------
-let data = JSON.parse(localStorage.getItem("splitAppData")) || {
-    groups: {
-        "My Group": {
-            people: [],
-            categories: ["Food","Entertainment","Fuel","Shopping"],
-            expenses: []
-        }
-    },
-    activeGroup: "My Group"
-};
-function save(){ localStorage.setItem("splitAppData", JSON.stringify(data)); }
+(function(){
+  const STORAGE_KEY = 'ws_final_v2';
+  const uid = ()=> Math.random().toString(36).slice(2,9);
 
-// --------------------------------------
-// Groups
-// --------------------------------------
-function refreshGroups(){
-    const sel=document.getElementById("groupSelect");
-    sel.innerHTML="";
-    Object.keys(data.groups).forEach(g=>{
-        let op=document.createElement("option");
-        op.value=g; op.textContent=g;
-        if(g===data.activeGroup) op.selected=true;
-        sel.appendChild(op);
-    });
+  // DOM refs
+  const groupSelect = el('groupSelect');
+  const newGroupBtn = el('newGroupBtn');
+  const delGroupBtn = el('delGroupBtn');
+  const addPersonBtn = el('addPerson');
+  const personName = el('personName');
+  const peopleList = el('peopleList');
+  const payerSelect = el('payerSelect');
+  const amountInput = el('amountInput');
+  const categorySelect = el('categorySelect');
+  const participantsDiv = el('participants');
+  const saveExpense = el('saveExpense');
+  const clearExpense = el('clearExpense');
+  const expensesList = el('expensesList');
+  const expCount = el('expCount');
+  const summaryDiv = el('summary');
+  const categoryTotalsDiv = el('categoryTotals');
+  const transferTo = el('transferTo');
+  const computeTransfer = el('computeTransfer');
+  const transferResult = el('transferResult');
+  const shareBtn = el('shareBtn');
+  const resetAll = el('resetAll');
+  const catName = el('catName');
+  const addCat = el('addCat');
+  const catList = el('catList');
+  const copySummary = el('copySummary');
+
+  const modal = el('modal');
+  const closeModal = el('closeModal');
+  const editPayer = el('editPayer');
+  const editAmount = el('editAmount');
+  const editCategory = el('editCategory');
+  const editParticipants = el('editParticipants');
+  const applyEdit = el('applyEdit');
+  const deleteExpenseBtn = el('deleteExpense');
+
+  // state
+  let data = { groups: [] };
+  let currentGroupId = null;
+  let editingId = null;
+
+  // helpers
+  function el(id){ return document.getElementById(id); }
+  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  function load(){ const s = localStorage.getItem(STORAGE_KEY); if(s){ try{ data = JSON.parse(s); } catch(e){ console.error(e); data = {groups:[]}; } } }
+  function currentGroup(){ return data.groups.find(g=>g.id===currentGroupId) || null; }
+
+  // init & default
+  load();
+  if(!data.groups || data.groups.length===0){
+    const gid = uid();
+    data.groups = [{ id: gid, name: 'My Group', people: [], categories: ['Food','Entertainment','Fuel','Shopping'], expenses: [] }];
+    currentGroupId = gid;
     save();
-    refreshPeople(); refreshCategories(); refreshExpenses(); updateSummary();
-}
-function addGroup(){
-    let name=document.getElementById("newGroupName").value.trim();
-    if(!name) return;
-    data.groups[name]={people:[],categories:["Food","Entertainment","Fuel","Shopping"],expenses:[]};
-    data.activeGroup=name;
-    document.getElementById("newGroupName").value="";
-    refreshGroups();
-}
-function switchGroup(){
-    data.activeGroup=document.getElementById("groupSelect").value;
-    save(); refreshPeople(); refreshCategories(); refreshExpenses(); updateSummary();
-}
+  } else {
+    currentGroupId = data.groups[0].id;
+  }
+  renderAll();
 
-// --------------------------------------
-// People
-// --------------------------------------
-function refreshPeople(){
-    const list=document.getElementById("peopleList");
-    const payerSel=document.getElementById("payerSelect");
-    list.innerHTML=""; payerSel.innerHTML="";
-    let g=data.groups[data.activeGroup];
-    g.people.forEach((p,i)=>{
-        let row=document.createElement("div");
-        row.className="list-item";
-        row.innerHTML=`${p}
-        <div>
-            <button class="edit-btn" onclick="renamePerson(${i})">Edit</button>
-            <button onclick="deletePerson(${i})">X</button>
-        </div>`;
-        list.appendChild(row);
-        let op=document.createElement("option");
-        op.value=p; op.textContent=p; payerSel.appendChild(op);
-    });
-    refreshParticipants(); save();
-}
-function addPerson(){
-    let name=document.getElementById("newPersonName").value.trim();
-    if(!name) return;
-    data.groups[data.activeGroup].people.push(name);
-    document.getElementById("newPersonName").value="";
-    refreshPeople();
-}
-function deletePerson(i){
-    data.groups[data.activeGroup].people.splice(i,1);
-    refreshPeople();
-}
-function renamePerson(i){
-    let newName=prompt("Enter new name:");
-    if(!newName) return;
-    data.groups[data.activeGroup].people[i]=newName;
-    refreshPeople();
-}
+  // Group handlers
+  newGroupBtn.addEventListener('click', ()=>{
+    const name = prompt('Group name') || ('Group-'+(data.groups.length+1));
+    const g = { id: uid(), name: name.trim(), people: [], categories: ['Food','Entertainment','Fuel','Shopping'], expenses: [] };
+    data.groups.push(g); currentGroupId = g.id; save(); renderAll();
+  });
+  groupSelect.addEventListener('change', ()=>{ currentGroupId = groupSelect.value; renderAll(); });
+  delGroupBtn.addEventListener('click', ()=>{
+    const g = currentGroup(); if(!g) return;
+    if(!confirm('Delete group "'+g.name+'"?')) return;
+    data.groups = data.groups.filter(x=>x.id!==g.id);
+    if(data.groups.length===0){
+      const gid = uid(); data.groups.push({id:gid, name:'My Group', people:[], categories:['Food','Entertainment','Fuel','Shopping'], expenses:[]});
+    }
+    currentGroupId = data.groups[0].id; save(); renderAll();
+  });
 
-// --------------------------------------
-// Categories
-// --------------------------------------
-function refreshCategories(){
-    const list=document.getElementById("categoryList");
-    const sel=document.getElementById("categorySelect");
-    list.innerHTML=""; sel.innerHTML="";
-    let g=data.groups[data.activeGroup];
-    g.categories.forEach((c,i)=>{
-        let row=document.createElement("div");
-        row.className="list-item";
-        row.innerHTML=`${c} <button onclick="deleteCategory(${i})">X</button>`;
-        list.appendChild(row);
-        let op=document.createElement("option");
-        op.value=c; op.textContent=c; sel.appendChild(op);
-    });
-    save();
-}
-function addCategory(){
-    let v=document.getElementById("newCategoryName").value.trim();
-    if(!v) return;
-    data.groups[data.activeGroup].categories.push(v);
-    document.getElementById("newCategoryName").value="";
-    refreshCategories();
-}
-function deleteCategory(i){
-    data.groups[data.activeGroup].categories.splice(i,1);
-    refreshCategories();
-}
+  // People
+  el('addPerson').addEventListener('click', ()=>{
+    const name = personName.value.trim(); if(!name) return alert('Enter name');
+    const g = currentGroup(); g.people.push({ id: uid(), name }); personName.value=''; save(); renderAll();
+  });
 
-// --------------------------------------
-// Participants
-// --------------------------------------
-function refreshParticipants(){
-    const div=document.getElementById("participantList");
-    div.innerHTML="";
-    let g=data.groups[data.activeGroup];
+  // delegate remove by clicking chip
+  peopleList.addEventListener('click', (ev)=>{
+    const pid = ev.target.dataset && ev.target.dataset.pid;
+    if(!pid) return;
+    const g = currentGroup();
+    const p = g.people.find(x=>x.id===pid);
+    if(!p) return;
+    if(!confirm('Remove '+p.name+'? This will remove them from expenses.')) return;
+    g.people = g.people.filter(x=>x.id!==pid);
+    // clean expenses participants/payers
+    g.expenses = g.expenses.map(ex=>({...ex, participants: ex.participants.filter(id=>id!==pid), payer: ex.payer===pid? (g.people[0]?g.people[0].id:null): ex.payer }))
+                          .filter(ex=>ex.participants && ex.participants.length>0);
+    save(); renderAll();
+  });
+
+  // Categories
+  addCat.addEventListener('click', ()=>{
+    const v = catName.value.trim(); if(!v) return;
+    const g = currentGroup(); if(g.categories.includes(v)) return alert('Category exists');
+    g.categories.push(v); catName.value=''; save(); renderAll();
+  });
+  catList.addEventListener('click', (ev)=>{
+    const c = ev.target.dataset && ev.target.dataset.cat; if(!c) return;
+    const g = currentGroup(); if(g.categories.length<=1) return alert('At least one category required');
+    if(!confirm('Remove category "'+c+'"?')) return;
+    g.categories = g.categories.filter(x=>x!==c); save(); renderAll();
+  });
+
+  // Expenses (add)
+  saveExpense.addEventListener('click', ()=>{
+    const g = currentGroup(); if(!g) return;
+    const payer = payerSelect.value;
+    let amt = Math.round(Number(amountInput.value || 0));
+    const cat = categorySelect.value;
+    const parts = Array.from(participantsDiv.querySelectorAll('input[type=checkbox]')).filter(ch=>ch.checked).map(ch=>ch.value);
+    if(!payer) return alert('Select payer');
+    if(!amt || amt<=0) return alert('Enter amount');
+    if(parts.length===0) return alert('Select participants');
+    const ex = { id: uid(), payer, amt: Math.round(amt), participants: parts, category: cat, ts: Date.now() };
+    g.expenses.push(ex); save(); amountInput.value=''; participantsDiv.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false); renderAll();
+  });
+  clearExpense.addEventListener('click', ()=>{ amountInput.value=''; participantsDiv.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false); });
+
+  // Edit modal logic
+  function openEdit(eid){
+    const g = currentGroup(); const ex = g.expenses.find(x=>x.id===eid); if(!ex) return;
+    editingId = eid; modal.style.display='flex';
+    editPayer.innerHTML=''; editParticipants.innerHTML=''; editCategory.innerHTML='';
+    g.people.forEach(p=>{ const o = document.createElement('option'); o.value=p.id; o.textContent=p.name; if(p.id===ex.payer) o.selected=true; editPayer.appendChild(o); });
+    g.categories.forEach(c=>{ const o = document.createElement('option'); o.value=c; o.textContent=c; if(c===ex.category) o.selected=true; editCategory.appendChild(o); });
+    editAmount.value = ex.amt;
+    g.people.forEach(p=>{ const lab=document.createElement('label'); lab.className='participant-checkbox'; lab.innerHTML = `<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`; editParticipants.appendChild(lab); });
+    editParticipants.querySelectorAll('input[type=checkbox]').forEach(cb=> cb.checked = ex.participants.includes(cb.value));
+  }
+  closeModal.addEventListener('click', ()=>{ modal.style.display='none'; editingId=null; });
+  applyEdit.addEventListener('click', ()=>{
+    const g = currentGroup(); if(!g || !editingId) return;
+    const ex = g.expenses.find(x=>x.id===editingId); if(!ex) return;
+    const payer = editPayer.value; const amt = Math.round(Number(editAmount.value || 0)); const cat = editCategory.value;
+    const parts = Array.from(editParticipants.querySelectorAll('input[type=checkbox]')).filter(ch=>ch.checked).map(ch=>ch.value);
+    if(!payer) return alert('Select payer');
+    if(!amt || amt<=0) return alert('Enter amount');
+    if(parts.length===0) return alert('Select participants');
+    ex.payer = payer; ex.amt = Math.round(amt); ex.category = cat; ex.participants = parts; ex.ts = Date.now();
+    save(); modal.style.display='none'; editingId=null; renderAll();
+  });
+  deleteExpenseBtn.addEventListener('click', ()=>{
+    if(!confirm('Delete this expense?')) return;
+    const g = currentGroup(); g.expenses = g.expenses.filter(x=>x.id!==editingId); save(); modal.style.display='none'; editingId=null; renderAll();
+  });
+
+  // Renderers
+  function renderAll(){
+    renderGroups(); renderPeople(); renderCategories(); renderExpenseForm(); renderExpenses(); renderSummary(); renderTransferSelect();
+  }
+
+  function renderGroups(){
+    groupSelect.innerHTML='';
+    data.groups.forEach(g=>{ const o=document.createElement('option'); o.value=g.id; o.textContent=g.name; if(g.id===currentGroupId) o.selected=true; groupSelect.appendChild(o); });
+  }
+
+  function renderPeople(){
+    const g = currentGroup(); peopleList.innerHTML=''; payerSelect.innerHTML=''; participantsDiv.innerHTML=''; editPayer.innerHTML=''; editParticipants.innerHTML='';
+    if(!g) return;
+    if(!g.people.length) peopleList.innerHTML = '<div class="small-muted">No people yet</div>';
     g.people.forEach(p=>{
-        let row=document.createElement("div");
-        row.innerHTML=`<label><input type="checkbox" value="${p}"> ${p}</label>`;
-        div.appendChild(row);
+      const chip = document.createElement('div'); chip.className='person-chip'; chip.textContent=p.name; chip.dataset.pid=p.id; chip.title='Tap to remove';
+      peopleList.appendChild(chip);
+      const opt = document.createElement('option'); opt.value=p.id; opt.textContent=p.name; payerSelect.appendChild(opt);
+      // participant checkbox (with input on left)
+      const lab = document.createElement('div'); lab.className='participant-checkbox';
+      lab.innerHTML = `<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
+      participantsDiv.appendChild(lab);
+      const lab2 = lab.cloneNode(true); editParticipants.appendChild(lab2);
     });
-}
+  }
 
-// --------------------------------------
-// Expenses
-// --------------------------------------
-function refreshExpenses(){
-    const list=document.getElementById("expenseList");
-    list.innerHTML="";
-    let g=data.groups[data.activeGroup];
-    g.expenses.forEach((ex,i)=>{
-        let row=document.createElement("div");
-        row.className="card";
-        row.innerHTML=
-        `<b>${ex.payer}</b> paid <b>₹${ex.amount}</b> for ${ex.category}<br>
-        Participants: ${ex.participants.join(", ")}<br><br>
-        <button class="edit-btn" onclick="editExpense(${i})">Edit</button>
-        <button onclick="deleteExpense(${i})">Delete</button>`;
-        list.appendChild(row);
+  function renderCategories(){
+    const g = currentGroup(); catList.innerHTML=''; categorySelect.innerHTML=''; editCategory.innerHTML='';
+    if(!g) return;
+    g.categories.forEach(c=>{
+      const chip = document.createElement('div'); chip.className='category-chip'; chip.textContent=c; chip.dataset.cat=c; chip.title='Tap to remove';
+      catList.appendChild(chip);
+      const opt = document.createElement('option'); opt.value=c; opt.textContent=c; categorySelect.appendChild(opt);
+      const opt2 = opt.cloneNode(true); editCategory.appendChild(opt2);
     });
-}
-function addExpense(){
-    const payer=document.getElementById("payerSelect").value;
-    const amount=Math.round(Number(document.getElementById("amountInput").value));
-    const category=document.getElementById("categorySelect").value;
-    let parts=[];
-    document.querySelectorAll("#participantList input:checked")
-        .forEach(c=>parts.push(c.value));
-    if(!payer || !amount || parts.length===0) return;
-    data.groups[data.activeGroup].expenses.push({payer,amount,participants:parts,category});
-    document.getElementById("amountInput").value="";
-    refreshExpenses(); updateSummary(); save();
-}
-function deleteExpense(i){
-    data.groups[data.activeGroup].expenses.splice(i,1);
-    refreshExpenses(); updateSummary(); save();
-}
-function editExpense(i){
-    let g=data.groups[data.activeGroup];
-    let ex=g.expenses[i];
-    let newAmount=prompt("Enter new amount:",ex.amount);
-    if(!newAmount) return;
-    ex.amount=Math.round(Number(newAmount));
-    refreshExpenses(); updateSummary(); save();
-}
+  }
 
-// --------------------------------------
-// Summary
-// --------------------------------------
-function updateSummary(){
-    let g=data.groups[data.activeGroup];
-    const div=document.getElementById("summaryBox");
-    div.innerHTML="";
-    let totals={}, bal={};
-    g.people.forEach(p=>bal[p]=0);
-    g.categories.forEach(c=>totals[c]=0);
-    g.expenses.forEach(ex=>{
-        totals[ex.category]+=ex.amount;
-        let split=Math.round(ex.amount/ex.participants.length);
-        ex.participants.forEach(p=>bal[p]-=split);
-        bal[ex.payer]+=ex.amount;
+  function renderExpenseForm(){ amountInput.value=''; participantsDiv.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false); }
+
+  function renderExpenses(){
+    const g = currentGroup(); expensesList.innerHTML=''; if(!g) return;
+    expCount.textContent = g.expenses.length + ' items';
+    if(g.expenses.length===0){ expensesList.innerHTML = '<div class="small-muted">No expenses</div>'; return; }
+    g.expenses.slice().reverse().forEach(ex=>{
+      const payerName = g.people.find(p=>p.id===ex.payer)?.name || 'Unknown';
+      const partNames = ex.participants.map(pid => g.people.find(p=>p.id===pid)?.name || '?').join(', ');
+      const div = document.createElement('div'); div.className='expense';
+      const left = document.createElement('div');
+      left.innerHTML = `<div style="font-weight:700">${ex.category} • ₹${ex.amt}</div>
+                        <div class="muted">${payerName} paid • split among ${partNames}</div>
+                        <div class="small-muted">${new Date(ex.ts || Date.now()).toLocaleString()}</div>`;
+      const right = document.createElement('div'); right.style.display='flex'; right.style.flexDirection='column'; right.style.gap='8px';
+      const editB = document.createElement('button'); editB.className='tiny icon-btn'; editB.title='Edit'; editB.innerHTML='✎';
+      editB.addEventListener('click', ()=> openEdit(ex.id));
+      const delB = document.createElement('button'); delB.className='tiny icon-btn'; delB.title='Delete'; delB.innerHTML='🗑';
+      delB.addEventListener('click', ()=>{ if(confirm('Delete this expense?')){ const g=currentGroup(); g.expenses = g.expenses.filter(x=>x.id!==ex.id); save(); renderAll(); }});
+      right.appendChild(editB); right.appendChild(delB);
+      div.appendChild(left); div.appendChild(right);
+      expensesList.appendChild(div);
     });
-    div.innerHTML+="<b>Category Totals:</b><br>";
-    g.categories.forEach(c=>div.innerHTML+=`${c}: ₹${totals[c]}<br>`);
-    div.innerHTML+="<br><b>Balances:</b><br>";
-    Object.keys(bal).forEach(p=>div.innerHTML+=`${p}: ₹${bal[p]}<br>`);
-}
+  }
 
-// --------------------------------------
-// Share as image
-// --------------------------------------
-function shareSummary(){
-    const sum=document.getElementById("summaryBox");
-    html2canvas(sum).then(canvas=>{
-        canvas.toBlob(blob=>{
-            const file=new File([blob],"summary.png",{type:"image/png"});
-            if(navigator.share){
-                navigator.share({title:"Split Summary",files:[file]});
-            }else alert("Sharing not supported here.");
-        });
+  // Calculations
+  function computeBalances(){
+    const g = currentGroup(); const bal = {}; if(!g) return bal;
+    g.people.forEach(p=> bal[p.id]=0);
+    g.expenses.forEach(e=>{
+      const n = e.participants.length;
+      const base = Math.floor(e.amt / n);
+      let rem = e.amt - base * n;
+      e.participants.forEach((pid, idx)=>{
+        let share = base + (rem>0?1:0); if(rem>0) rem--;
+        bal[pid] = (bal[pid] || 0) - share;
+      });
+      bal[e.payer] = (bal[e.payer] || 0) + e.amt;
     });
-}
+    Object.keys(bal).forEach(k=> bal[k] = Math.round(bal[k]));
+    return bal;
+  }
 
-// Init
-refreshGroups();
+  function computeCategoryTotals(){
+    const g = currentGroup(); const ct = {}; if(!g) return ct;
+    g.categories.forEach(c=> ct[c]=0);
+    g.expenses.forEach(e=> { if(!ct[e.category]) ct[e.category]=0; ct[e.category] += e.amt; });
+    return ct;
+  }
+
+  function renderSummary(){
+    const g = currentGroup(); summaryDiv.innerHTML=''; categoryTotalsDiv.innerHTML=''; transferResult.innerHTML='';
+    if(!g) return;
+    const ct = computeCategoryTotals();
+    Object.keys(ct).forEach(c=>{ const row=document.createElement('div'); row.className='summary-row'; row.innerHTML=`<div>${c}</div><div class="badge">₹${ct[c]||0}</div>`; categoryTotalsDiv.appendChild(row); });
+    const bal = computeBalances();
+    const list = g.people.map(p=>({id:p.id,name:p.name,amt:bal[p.id]||0})).sort((a,b)=>b.amt-a.amt);
+    list.forEach(item=>{
+      const row = document.createElement('div'); row.className='summary-row';
+      const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:700">${item.name}</div><div class="small-muted">Net</div>`;
+      const right = document.createElement('div'); right.innerHTML = `<div class="${item.amt>=0?'positive':'negative'}">₹${Math.abs(item.amt)}</div>`;
+      row.appendChild(left); row.appendChild(right); summaryDiv.appendChild(row);
+    });
+  }
+
+  // Transfer-to logic (Option A: simple flow)
+  computeTransfer.addEventListener('click', ()=>{
+    const g = currentGroup(); if(!g) return;
+    const toId = transferTo.value; if(!toId) return alert('Select transfer-to person');
+    const bal = computeBalances();
+    const creditors = []; const debtors = [];
+    for(const pid in bal){
+      const v = bal[pid];
+      if(v>0) creditors.push({id:pid,amt:v});
+      else if(v<0) debtors.push({id:pid,amt:-v});
+    }
+    // Debt payments: each debtor pays their amount to 'toId' (except if debtor is toId)
+    const ops = [];
+    let totalToReceive = 0;
+    debtors.forEach(d=>{
+      if(d.id === toId) return; // if toId owes, skip here (they won't pay themselves)
+      ops.push({ from: d.id, to: toId, amt: d.amt });
+      totalToReceive += d.amt;
+    });
+    // Now compute toId's new amount
+    const toInitial = bal[toId] || 0;
+    const toAfter = toInitial + totalToReceive;
+    // Now, toId forwards to other creditors (excluding toId)
+    const otherCreds = creditors.filter(c=>c.id !== toId).map(c=>({...c}));
+    let remaining = toAfter;
+    otherCreds.forEach(c=>{
+      if(remaining<=0) return;
+      const pay = Math.min(remaining, c.amt);
+      if(pay>0){ ops.push({ from: toId, to: c.id, amt: pay }); remaining -= pay; }
+    });
+    renderTransferOpsSimple(ops, g);
+  });
+
+  function renderTransferOpsSimple(ops, g){
+    transferResult.innerHTML='';
+    if(!ops.length){ transferResult.innerHTML = '<div class="small-muted">Nothing to transfer — settled</div>'; return; }
+    const map = {}; g.people.forEach(p=> map[p.id]=p.name);
+    // aggregate same from->to
+    const agg = {};
+    ops.forEach(o=>{ const k = o.from+'|'+o.to; agg[k] = (agg[k]||0) + o.amt; });
+    // Create readable sentences
+    // First: check if all ops are of form debtor -> selected, then selected -> creditors
+    // We'll form sentences:
+    // "Everyone pays <collector>." and then "<collector> transfers X to Y." where applicable.
+    // Identify collector as the 'to' target which receives from many debtors (heuristic)
+    const receivers = {};
+    const senders = {};
+    Object.keys(agg).forEach(k=>{
+      const [from,to] = k.split('|'); const amt = agg[k];
+      receivers[to] = receivers[to] || []; receivers[to].push({from, amt});
+      senders[from] = senders[from] || []; senders[from].push({to, amt});
+    });
+
+    // Build UI list (rows) plus sentences
+    const sentences = [];
+    // Find main collector: the one who receives from multiple debtors (or the most)
+    let collector = null;
+    let maxReceive = 0;
+    for(const r in receivers){
+      const total = receivers[r].reduce((s,it)=>s+it.amt,0);
+      if(total > maxReceive){ maxReceive = total; collector = r; }
+    }
+    // If collector present and received from at least one debtor:
+    if(collector){
+      sentences.push(`Everyone pays ${map[collector]}.`);
+    }
+    // Render aggregated ops as rows and also produce second-line sentences for collector forwards
+    const forwardOps = []; // ops where from == collector
+    Object.keys(agg).forEach(k=>{
+      const [from,to] = k.split('|'); const amt = agg[k];
+      if(from === collector && to !== collector){ forwardOps.push({from,to,amt}); }
+    });
+    // Build transfer rows in the output:
+    // First show all ops: debtor -> collector (we'll show aggregated list)
+    // Show rows grouped by from->to
+    Object.keys(agg).forEach(k=>{
+      const [from,to] = k.split('|'); const amt = agg[k];
+      const row = document.createElement('div'); row.className='summary-row';
+      row.innerHTML = `<div>${map[from] || '?'} → ${map[to] || '?'}</div><div class="badge">₹${amt}</div>`;
+      transferResult.appendChild(row);
+    });
+    // Build sentences for forwards (collector pays others)
+    forwardOps.forEach(op=>{
+      sentences.push(`${map[collector]} transfers ₹${op.amt} to ${map[op.to]}.`);
+    });
+    // If no forward ops but collector exists, still show a sentence if other creditors exist
+    if(collector && forwardOps.length===0){
+      // if there are creditors other than collector, and collector had positive toForward, show sentence
+      // but to keep it simple, only list forwardOps sentences which exist
+    }
+
+    // Add sentences block below rows
+    if(sentences.length){
+      const sblock = document.createElement('div'); sblock.style.marginTop = '8px'; sblock.style.fontSize = '13px';
+      sentences.forEach(s=>{ const p = document.createElement('div'); p.textContent = s; sblock.appendChild(p); });
+      transferResult.appendChild(sblock);
+    }
+  }
+
+  // Share summary as image
+  el('shareBtn').addEventListener('click', async ()=>{
+    const wrap = el('summaryWrap');
+    if(!wrap) return;
+    const oldBG = wrap.style.background;
+    wrap.style.background = '#ffffff';
+    try{
+      const canvas = await html2canvas(wrap, {backgroundColor: null, scale: window.devicePixelRatio || 2});
+      const dataURL = canvas.toDataURL('image/png');
+      const res = await fetch(dataURL);
+      const blob = await res.blob();
+      const file = new File([blob], 'weekend-summary.png', {type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({ files: [file], title: 'Weekend Summary' }).catch(()=>{/*ignore*/});
+      } else {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      }
+    }catch(err){
+      console.error(err); alert('Could not generate image');
+    }finally{
+      wrap.style.background = oldBG;
+    }
+  });
+
+  // Copy textual summary
+  copySummary.addEventListener('click', ()=>{
+    const g = currentGroup(); if(!g) return;
+    const bal = computeBalances(); const ct = computeCategoryTotals();
+    let s = `Group: ${g.name}\n\nCategory totals:\n`;
+    Object.keys(ct).forEach(c=> s += `${c}: ₹${ct[c]}\n`);
+    s += `\nBalances:\n`;
+    g.people.forEach(p=> s += `${p.name}: ₹${Math.round(bal[p.id]||0)}\n`);
+    if(navigator.clipboard) navigator.clipboard.writeText(s).then(()=> alert('Summary copied to clipboard'));
+  });
+
+  // Reset all
+  resetAll.addEventListener('click', ()=>{
+    if(!confirm('Clear all groups & data?')) return;
+    data = { groups: [] };
+    const gid = uid();
+    data.groups.push({id:gid,name:'My Group',people:[],categories:['Food','Entertainment','Fuel','Shopping'],expenses:[]});
+    currentGroupId = gid; save(); renderAll();
+  });
+
+  // Utility: render transferTo select
+  function renderTransferSelect(){
+    transferTo.innerHTML=''; const g = currentGroup();
+    if(!g) return;
+    g.people.forEach(p=> { const opt = document.createElement('option'); opt.value=p.id; opt.textContent=p.name; transferTo.appendChild(opt); });
+  }
+
+  // initial render
+  renderAll();
+
+  // Expose openEdit for buttons created earlier
+  window.openEdit = openEdit;
+
+})();
 </script>
 </body>
 </html>
