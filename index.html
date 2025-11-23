@@ -4,7 +4,6 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Weekend Split — Minimal</title>
-
 <style>
   :root{
     --bg:#f6f7f9;
@@ -42,9 +41,6 @@
   .summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:var(--plate);margin-bottom:8px;border:1px solid rgba(15,23,36,0.03)}
   .positive{color:var(--success);font-weight:700}
   .negative{color:var(--danger);font-weight:700}
-  .note{font-size:13px;color:var(--muted);margin-top:8px}
-  .list-scroll{max-height:320px;overflow:auto;padding-right:6px}
-  .select-inline{display:flex;gap:8px;align-items:center}
   .badge{padding:6px 10px;border-radius:999px;background:#fff;border:1px solid rgba(15,23,36,0.04);font-weight:600}
   .center{display:flex;align-items:center;justify-content:center}
   .share-icon{font-size:18px;padding:8px;border-radius:8px;border:1px solid rgba(15,23,36,0.03);background:#fff;cursor:pointer}
@@ -62,7 +58,6 @@
         <h1>Weekend Split</h1>
       </div>
     </div>
-    <div class="controls"></div>
   </header>
 
   <div class="card">
@@ -78,6 +73,7 @@
 
   <div class="grid">
     <div>
+      <!-- People -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:700">People</div>
@@ -89,6 +85,7 @@
         <div style="margin-top:10px" id="peopleList" class="people-list"></div>
       </div>
 
+      <!-- Categories -->
       <div class="card" style="margin-top:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:700">Categories</div>
@@ -100,11 +97,11 @@
         <div id="catList" class="people-list" style="margin-top:10px"></div>
       </div>
 
+      <!-- Expense form -->
       <div class="card" style="margin-top:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:700">Add / Edit Expense</div>
         </div>
-
         <div style="margin-top:10px">
           <label>Payer</label>
           <select id="payerSelect"></select>
@@ -125,6 +122,7 @@
         </div>
       </div>
 
+      <!-- Expenses list -->
       <div class="card" style="margin-top:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:700">Expenses</div>
@@ -135,6 +133,7 @@
     </div>
 
     <div class="right">
+      <!-- Summary + share -->
       <div class="card" id="summaryCard">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:700">Summary</div>
@@ -145,8 +144,8 @@
 
         <div id="summaryWrap" style="margin-top:12px">
           <div id="categoryTotals" style="margin-top:8px"></div>
-          <div style="height:8px"></div>
           <div id="summary" style="margin-top:8px"></div>
+
           <div style="height:12px"></div>
           <div id="transferResultInline" style="margin-top:8px"></div>
 
@@ -154,21 +153,33 @@
             <button id="resetEntriesBtn" class="btn ghost tiny" style="flex:1">Reset Entries</button>
             <button id="copySummary" class="btn tiny" style="flex:1">Copy Summary Text</button>
           </div>
+
+          <div style="height:10px"></div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+            <div style="font-weight:700">Transfer To</div>
+          </div>
+
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+            <select id="transferTo" style="flex:1"></select>
+            <button id="computeTransfer" class="btn tiny">Compute</button>
+          </div>
+
+          <div id="transferResult" style="margin-top:12px"></div>
         </div>
+      </div>
 
-        <div style="height:10px"></div>
-
-        <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
-          <select id="transferTo" style="flex:1"></select>
-          <button id="computeTransfer" class="btn tiny">Compute</button>
+      <!-- Actions -->
+      <div class="card" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Info</div>
         </div>
-
-        <div id="transferResult" style="margin-top:12px"></div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Edit modal -->
 <div id="modal" class="modal-back">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
     <div style="display:flex;justify-content:space-between;align-items:center">
@@ -193,160 +204,140 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
-
 <script>
 (function(){
-const STORAGE_KEY='ws_final_v3';
-const uid=()=>Math.random().toString(36).slice(2,9);
+  const STORAGE_KEY='ws_final_v3';
+  const uid=()=>Math.random().toString(36).slice(2,9);
 
-const groupSelect=el('groupSelect'),newGroupBtn=el('newGroupBtn'),delGroupBtn=el('delGroupBtn'),
-addPersonBtn=el('addPerson'),personName=el('personName'),peopleList=el('peopleList'),
-payerSelect=el('payerSelect'),amountInput=el('amountInput'),categorySelect=el('categorySelect'),
-participantsDiv=el('participants'),saveExpense=el('saveExpense'),clearExpense=el('clearExpense'),
-expensesList=el('expensesList'),expCount=el('expCount'),summaryDiv=el('summary'),
-categoryTotalsDiv=el('categoryTotals'),transferTo=el('transferTo'),computeTransfer=el('computeTransfer'),
-transferResult=el('transferResult'),shareBtn=el('shareBtn'),catName=el('catName'),addCat=el('addCat'),
-catList=el('catList'),copySummary=el('copySummary'),resetEntriesBtn=el('resetEntriesBtn'),
-transferResultInline=el('transferResultInline');
+  const groupSelect=el('groupSelect'),newGroupBtn=el('newGroupBtn'),delGroupBtn=el('delGroupBtn'),
+        addPersonBtn=el('addPerson'),personName=el('personName'),peopleList=el('peopleList'),
+        payerSelect=el('payerSelect'),amountInput=el('amountInput'),categorySelect=el('categorySelect'),
+        participantsDiv=el('participants'),saveExpense=el('saveExpense'),clearExpense=el('clearExpense'),
+        expensesList=el('expensesList'),expCount=el('expCount'),summaryDiv=el('summary'),
+        categoryTotalsDiv=el('categoryTotals'),transferTo=el('transferTo'),computeTransfer=el('computeTransfer'),
+        transferResult=el('transferResult'),shareBtn=el('shareBtn'),catName=el('catName'),
+        addCat=el('addCat'),catList=el('catList'),copySummary=el('copySummary'),resetEntriesBtn=el('resetEntriesBtn'),
+        transferResultInline=el('transferResultInline'),modal=el('modal'),closeModal=el('closeModal'),
+        editPayer=el('editPayer'),editAmount=el('editAmount'),editCategory=el('editCategory'),
+        editParticipants=el('editParticipants'),applyEdit=el('applyEdit'),deleteExpenseBtn=el('deleteExpense');
 
-const modal=el('modal'),closeModal=el('closeModal'),editPayer=el('editPayer'),editAmount=el('editAmount'),
-editCategory=el('editCategory'),editParticipants=el('editParticipants'),applyEdit=el('applyEdit'),
-deleteExpenseBtn=el('deleteExpense');
+  let data={groups:[]},currentGroupId=null,editingId=null;
 
-let data={groups:[]},currentGroupId=null,editingId=null;
+  function el(id){return document.getElementById(id);}
+  function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+  function load(){const s=localStorage.getItem(STORAGE_KEY);if(s){try{data=JSON.parse(s);}catch(e){data={groups:[]};}}}
+  function currentGroup(){return data.groups.find(g=>g.id===currentGroupId)||null;}
 
-function el(id){return document.getElementById(id);}
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
-function load(){const s=localStorage.getItem(STORAGE_KEY);if(s){try{data=JSON.parse(s);}catch(e){data={groups:[]};}}}
-function currentGroup(){return data.groups.find(g=>g.id===currentGroupId) || null;}
+  load();
+  if(!data.groups.length){const gid=uid();data.groups=[{id:gid,name:'My Group',people:[],categories:['Food','Entertainment','Fuel','Shopping'],expenses:[]}];currentGroupId=gid;save();}
+  else currentGroupId=data.groups[0].id;
 
-load();
-if(!data.groups.length){const gid=uid();data.groups=[{id:gid,name:'My Group',people:[],categories:['Food','Entertainment','Fuel','Shopping'],expenses:[]}];currentGroupId=gid;save();}
-else{currentGroupId=data.groups[0].id;}
+  function renderAll(){renderGroups(); renderPeople(); renderCategories(); renderExpenses(); renderSummary(); renderTransferSelect();}
+  
+  function renderGroups(){groupSelect.innerHTML='';data.groups.forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.name;if(g.id===currentGroupId)o.selected=true;groupSelect.appendChild(o);});}
+  
+  function renderPeople(){
+    const g=currentGroup();peopleList.innerHTML='';payerSelect.innerHTML='';participantsDiv.innerHTML='';
+    if(!g)return;if(!g.people.length)peopleList.innerHTML='<div class="small-muted">No people yet</div>';
+    g.people.forEach(p=>{
+      const chip=document.createElement('div');chip.className='person-chip';chip.textContent=p.name;chip.dataset.pid=p.id;chip.title='Tap to remove';
+      chip.addEventListener('click',()=>{const cb=document.querySelector(`#participants input[value="${p.id}"]`);if(cb)cb.checked=!cb.checked;});
+      peopleList.appendChild(chip);
+      const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name;payerSelect.appendChild(opt);
+      const lab=document.createElement('div');lab.className='participant-checkbox';lab.innerHTML=`<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
+      lab.addEventListener('click',()=>{const cb=lab.querySelector('input');cb.checked=!cb.checked;});
+      participantsDiv.appendChild(lab);
+    });
+  }
 
-function renderAll(){renderGroups();renderPeople();renderCategories();renderExpenses();renderSummary();renderTransferSelect();}
+  function renderCategories(){const g=currentGroup();catList.innerHTML='';categorySelect.innerHTML='';if(!g)return;g.categories.forEach(c=>{const chip=document.createElement('div');chip.className='category-chip';chip.textContent=c;chip.dataset.cat=c;chip.title='Tap to remove';catList.appendChild(chip);const opt=document.createElement('option');opt.value=c;opt.textContent=c;categorySelect.appendChild(opt);});}
 
-function renderGroups(){groupSelect.innerHTML='';data.groups.forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.name;if(g.id===currentGroupId)o.selected=true;groupSelect.appendChild(o);});}
+  function renderExpenses(){
+    const g=currentGroup();expensesList.innerHTML='';if(!g)return;expCount.textContent=g.expenses.length+' items';
+    if(!g.expenses.length){expensesList.innerHTML='<div class="small-muted">No expenses</div>';return;}
+    g.expenses.slice().reverse().forEach(ex=>{
+      const payerName=g.people.find(p=>p.id===ex.payer)?.name||'Unknown';
+      const partNames=ex.participants.map(pid=>g.people.find(p=>p.id===pid)?.name||'?').join(', ');
+      const div=document.createElement('div');div.className='expense';
+      const left=document.createElement('div');
+      left.innerHTML=`<div style="font-weight:700">${ex.category} • ₹${ex.amt}</div><div class="muted">${payerName} paid • split among ${partNames}</div>`;
+      const right=document.createElement('div');right.style.display='flex';right.style.flexDirection='column';right.style.gap='8px';
+      const editB=document.createElement('button');editB.className='tiny icon-btn';editB.title='Edit';editB.innerHTML='✎';editB.addEventListener('click',()=>openEdit(ex.id));
+      const delB=document.createElement('button');delB.className='tiny icon-btn';delB.title='Delete';delB.innerHTML='🗑';delB.addEventListener('click',()=>{if(confirm('Delete this expense?')){const g=currentGroup();g.expenses=g.expenses.filter(x=>x.id!==ex.id);save();renderAll();}});
+      right.appendChild(editB);right.appendChild(delB);
+      div.appendChild(left);div.appendChild(right);expensesList.appendChild(div);
+    });
+  }
 
-function renderPeople(){
-const g=currentGroup();peopleList.innerHTML='';payerSelect.innerHTML='';participantsDiv.innerHTML='';
-if(!g)return;if(!g.people.length){peopleList.innerHTML='<div class="small-muted">No people yet</div>';}
-g.people.forEach(p=>{
-  const chip=document.createElement('div');chip.className='person-chip';chip.textContent=p.name;chip.dataset.pid=p.id;
-  chip.addEventListener('click',()=>{if(confirm('Remove '+p.name+'?')){g.people=g.people.filter(x=>x.id!==p.id);g.expenses=g.expenses.map(ex=>({...ex,participants:ex.participants.filter(pid=>pid!==p.id),payer:ex.payer===p.id?(g.people[0]?.id||null):ex.payer})).filter(ex=>ex.participants.length>0);save();renderAll();}});
-  peopleList.appendChild(chip);
+  function renderSummary(){
+    const g=currentGroup();if(!g)return;summaryDiv.innerHTML='';categoryTotalsDiv.innerHTML='';
+    if(!g.expenses.length){summaryDiv.innerHTML='<div class="small-muted">No data</div>';return;}
+    let totals={},catTotals={};
+    g.people.forEach(p=>totals[p.id]=0);g.categories.forEach(c=>catTotals[c]=0);
+    g.expenses.forEach(ex=>{
+      const per=ex.amt/ex.participants.length;
+      ex.participants.forEach(pid=>totals[pid]-=per);
+      totals[ex.payer]+=ex.amt;
+      catTotals[ex.category]+=ex.amt;
+    });
+    let sumHtml='';
+    g.people.forEach(p=>{const v=Math.round(totals[p.id]*100)/100;sumHtml+=`<div class="summary-row">${p.name}: <span class="${v>=0?'positive':'negative'}">₹${v}</span></div>`;});
+    summaryDiv.innerHTML=sumHtml;
+    let catHtml='';for(const c in catTotals){catHtml+=`<div class="summary-row">${c}: ₹${catTotals[c]}</div>`;}categoryTotalsDiv.innerHTML=catHtml;
+  }
 
-  const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name;payerSelect.appendChild(opt);
+  function renderTransferSelect(){const g=currentGroup();transferTo.innerHTML='';if(!g)return;g.people.forEach(p=>{const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name;transferTo.appendChild(opt);});}
 
-  const lab=document.createElement('div');lab.className='participant-checkbox';lab.innerHTML=`<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
-  lab.addEventListener('click',()=>{const cb=lab.querySelector('input');cb.checked=!cb.checked;});
-  participantsDiv.appendChild(lab);
-});
-}
+  newGroupBtn.addEventListener('click',()=>{const n=prompt('Group name');if(!n)return;const gid=uid();data.groups.push({id:gid,name:n,people:[],categories:[],expenses:[]});currentGroupId=gid;save();renderAll();});
+  delGroupBtn.addEventListener('click',()=>{if(!confirm('Delete this group?'))return;data.groups=data.groups.filter(g=>g.id!==currentGroupId);currentGroupId=data.groups[0]?.id||null;save();renderAll();});
+  groupSelect.addEventListener('change',()=>{currentGroupId=groupSelect.value;renderAll();});
 
-function renderCategories(){const g=currentGroup();catList.innerHTML='';categorySelect.innerHTML='';if(!g)return;g.categories.forEach(c=>{const chip=document.createElement('div');chip.className='category-chip';chip.textContent=c;chip.dataset.cat=c;chip.addEventListener('click',()=>{if(g.categories.length>1&&confirm('Remove '+c+'?')){g.categories=g.categories.filter(x=>x!==c);save();renderAll();}});catList.appendChild(chip);const opt=document.createElement('option');opt.value=c;opt.textContent=c;categorySelect.appendChild(opt);});}
+  addPersonBtn.addEventListener('click',()=>{const g=currentGroup();if(!g)return;const n=personName.value.trim();if(!n)return;g.people.push({id:uid(),name:n});personName.value='';save();renderAll();});
+  addCat.addEventListener('click',()=>{const g=currentGroup();if(!g)return;const n=catName.value.trim();if(!n)return;g.categories.push(n);catName.value='';save();renderAll();});
 
-function renderExpenses(){const g=currentGroup();expensesList.innerHTML='';expCount.textContent=g?.expenses.length||0+' items';if(!g||!g.expenses.length){expensesList.innerHTML='<div class="small-muted">No expenses</div>';return;}
-g.expenses.slice().reverse().forEach(ex=>{const div=document.createElement('div');div.className='expense';const left=document.createElement('div');left.innerHTML=`<div style="font-weight:700">${ex.category} • ₹${ex.amt}</div>
-<div class="muted">${g.people.find(p=>p.id===ex.payer)?.name||'?'} paid • split among ${ex.participants.map(pid=>g.people.find(p=>p.id===pid)?.name||'?').join(', ')}</div>`;
-const right=document.createElement('div');right.style.display='flex';right.style.flexDirection='column';right.style.gap='8px';
-const editB=document.createElement('button');editB.className='tiny icon-btn';editB.innerHTML='✎';editB.addEventListener('click',()=>openEdit(ex.id));
-const delB=document.createElement('button');delB.className='tiny icon-btn';delB.innerHTML='🗑';delB.addEventListener('click',()=>{if(confirm('Delete this expense?')){g.expenses=g.expenses.filter(x=>x.id!==ex.id);save();renderAll();}});
-right.appendChild(editB);right.appendChild(delB);div.appendChild(left);div.appendChild(right);expensesList.appendChild(div);});}
+  saveExpense.addEventListener('click',()=>{
+    const g=currentGroup();if(!g)return;const payer=payerSelect.value,amt=parseFloat(amountInput.value),cat=categorySelect.value;
+    if(!payer||isNaN(amt)||amt<=0||!cat)return;
+    const participants=[...participantsDiv.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value);
+    if(!participants.length)return;
+    g.expenses.push({id:uid(),payer,amt,category:cat,participants});amountInput.value='';participantsDiv.querySelectorAll('input').forEach(cb=>cb.checked=false);save();renderAll();
+  });
 
-function renderSummary(){
-const g=currentGroup();summaryDiv.innerHTML='';categoryTotalsDiv.innerHTML='';transferResultInline.innerHTML='';if(!g)return;
-let catTotals={};g.categories.forEach(c=>catTotals[c]=0);
-g.expenses.forEach(ex=>catTotals[ex.category]+=(ex.amt||0));
-for(let c in catTotals){const div=document.createElement('div');div.className='summary-row';div.innerHTML=`<div>${c}</div><div>₹${catTotals[c]}</div>`;categoryTotalsDiv.appendChild(div);}
-let totalSpent={},totalOwe={};g.people.forEach(p=>{totalSpent[p.id]=0;totalOwe[p.id]=0;});
-g.expenses.forEach(ex=>{totalSpent[ex.payer]+=ex.amt;const per=ex.amt/ex.participants.length;ex.participants.forEach(pid=>{totalOwe[pid]+=per;});});
-g.people.forEach(p=>{const net=Math.round((totalSpent[p.id]-totalOwe[p.id])*100)/100;const div=document.createElement('div');div.className='summary-row';div.innerHTML=`<div>${p.name}</div><div class="${net>=0?'positive':'negative'}">₹${net}</div>`;summaryDiv.appendChild(div);});
-}
+  clearExpense.addEventListener('click',()=>{amountInput.value='';participantsDiv.querySelectorAll('input').forEach(cb=>cb.checked=false);});
 
-function renderTransferSelect(){const g=currentGroup();transferTo.innerHTML='';if(!g)return;g.people.forEach(p=>{const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name;transferTo.appendChild(opt);});}
+  computeTransfer.addEventListener('click',()=>{
+    const g=currentGroup();transferResult.innerHTML='';transferResultInline.innerHTML='';if(!g)return;
+    const selected=transferTo.value; const selName=g.people.find(p=>p.id===selected)?.name||'';
+    let totalSpent={}, totalOwe={}; g.people.forEach(p=>{totalSpent[p.id]=0; totalOwe[p.id]=0;});
+    g.expenses.forEach(ex=>{totalSpent[ex.payer]+=ex.amt; const per=ex.amt/ex.participants.length; ex.participants.forEach(pid=>totalOwe[pid]+=per);});
+    const net={}; g.people.forEach(p=>{net[p.id]=Math.round((totalSpent[p.id]-totalOwe[p.id])*100)/100;});
+    const res=[]; res.push(`All pay to ${selName}`);
+    g.people.forEach(p=>{if(p.id===selected)return; const diff=Math.round((net[p.id]-net[selected])*100)/100; if(diff<0) res.push(`${p.name} pays ₹${Math.abs(diff)} to ${selName}`);});
+    g.people.forEach(p=>{if(p.id===selected)return; const diff=Math.round((net[selected]-net[p.id])*100)/100; if(diff<0) res.push(`${selName} pays ₹${Math.abs(diff)} to ${p.name}`);});
+    transferResult.innerHTML=res.join('<br>'); transferResultInline.innerHTML=transferResult.innerHTML;
+  });
 
-newGroupBtn.addEventListener('click',()=>{
-const name=prompt('New group name');if(!name)return;
-const gid=uid();data.groups.push({id:gid,name,p,eople:[],categories:['Food','Entertainment','Fuel','Shopping'],expenses:[]});currentGroupId=gid;save();renderAll();
-});
+  shareBtn.addEventListener('click',()=>{navigator.share?navigator.share({title:'Weekend Split Summary',text:transferResultInline.textContent}):alert('Sharing not supported in this browser.');});
+  copySummary.addEventListener('click',()=>{navigator.clipboard.writeText(summaryDiv.textContent+'\n'+transferResultInline.textContent).then(()=>alert('Copied!'));});
+  resetEntriesBtn.addEventListener('click'=>{if(!confirm('Clear all expenses?'))return;const g=currentGroup();if(!g)return;g.expenses=[];save();renderAll();});
 
-delGroupBtn.addEventListener('click',()=>{
-if(!currentGroup())return;if(confirm('Delete group?')){data.groups=data.groups.filter(g=>g.id!==currentGroupId);currentGroupId=data.groups[0]?.id||null;save();renderAll();}});
+  function openEdit(id){editingId=id;const g=currentGroup();if(!g)return;const ex=g.expenses.find(e=>e.id===id);if(!ex)return;
+    modal.style.display='flex';editPayer.innerHTML='';editCategory.innerHTML='';editParticipants.innerHTML='';
+    g.people.forEach(p=>{const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name;if(p.id===ex.payer)opt.selected=true;editPayer.appendChild(opt);
+      const lab=document.createElement('div');lab.className='participant-checkbox';lab.innerHTML=`<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
+      if(ex.participants.includes(p.id))lab.querySelector('input').checked=true;lab.addEventListener('click',()=>{const cb=lab.querySelector('input');cb.checked=!cb.checked;});editParticipants.appendChild(lab);});
+    g.categories.forEach(c=>{const opt=document.createElement('option');opt.value=c;opt.textContent=c;if(c===ex.category)opt.selected=true;editCategory.appendChild(opt);});
+    editAmount.value=ex.amt;
+  }
 
-groupSelect.addEventListener('change',(e)=>{currentGroupId=e.target.value;renderAll();});
+  closeModal.addEventListener('click',()=>{modal.style.display='none';editingId=null;});
+  applyEdit.addEventListener('click',()=>{const g=currentGroup();if(!g)return;if(!editingId)return;const ex=g.expenses.find(e=>e.id===editingId);if(!ex)return;
+    const payer=editPayer.value,amt=parseFloat(editAmount.value),cat=editCategory.value; if(!payer||isNaN(amt)||amt<=0||!cat)return;
+    const participants=[...editParticipants.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value); if(!participants.length)return;
+    ex.payer=payer; ex.amt=amt; ex.category=cat; ex.participants=participants; save(); renderAll(); modal.style.display='none'; editingId=null;});
+  deleteExpenseBtn.addEventListener('click',()=>{const g=currentGroup();if(!g)return;if(!editingId)return; g.expenses=g.expenses.filter(x=>x.id!==editingId); save(); renderAll(); modal.style.display='none'; editingId=null;});
 
-addPersonBtn.addEventListener('click',()=>{
-const g=currentGroup();if(!g||!personName.value.trim())return;
-g.people.push({id:uid(),name:personName.value.trim()});personName.value='';save();renderPeople();renderExpenses();renderSummary();
-});
-
-addCat.addEventListener('click',()=>{
-const g=currentGroup();if(!g||!catName.value.trim())return;
-if(g.categories.includes(catName.value.trim())){alert('Already exists');return;}
-g.categories.push(catName.value.trim());catName.value='';save();renderCategories();});
-
-saveExpense.addEventListener('click',()=>{
-const g=currentGroup();if(!g||!amountInput.value||!payerSelect.value)return;
-const selectedP=[...participantsDiv.querySelectorAll('input[type="checkbox"]:checked')].map(cb=>cb.value);
-if(!selectedP.length){alert('Select participants');return;}
-g.expenses.push({id:uid(),payer:payerSelect.value,amt:Number(amountInput.value),category:categorySelect.value,participants:selectedP});amountInput.value='';[...participantsDiv.querySelectorAll('input')].forEach(cb=>cb.checked=false);save();renderExpenses();renderSummary();
-});
-
-clearExpense.addEventListener('click',()=>{amountInput.value='';[...participantsDiv.querySelectorAll('input')].forEach(cb=>cb.checked=false);});
-
-computeTransfer.addEventListener('click',()=>{
-const g=currentGroup();transferResult.innerHTML='';if(!g)return;
-let totalSpent={},totalOwe={};g.people.forEach(p=>{totalSpent[p.id]=0;totalOwe[p.id]=0;});
-g.expenses.forEach(ex=>{totalSpent[ex.payer]+=ex.amt;const per=ex.amt/ex.participants.length;ex.participants.forEach(pid=>{totalOwe[pid]+=per;});});
-const target=transferTo.value;const res=[];
-g.people.forEach(p=>{if(p.id===target)return;const net=Math.round((totalOwe[p.id]-totalSpent[p.id])*100)/100;if(net>0)res.push(`${p.name} pays ₹${net} to ${g.people.find(x=>x.id===target)?.name}`);});
-transferResult.innerHTML=res.length?res.join('<br>'):'All settled';transferResultInline.innerHTML=transferResult.innerHTML;
-});
-
-copySummary.addEventListener('click',()=>{navigator.clipboard.writeText(summaryDiv.textContent);alert('Copied to clipboard');});
-resetEntriesBtn.addEventListener('click',()=>{if(!currentGroup()||!confirm('Reset all entries?'))return;currentGroup().expenses=[];save();renderAll();});
-
-shareBtn.addEventListener('click',()=>{
-html2canvas(document.querySelector('#summaryCard')).then(canvas=>{
-if(navigator.share){canvas.toBlob(blob=>{const file=new File([blob],'summary.png',{type:'image/png'});navigator.share({files:[file],title:'Weekend Split Summary'}).catch(console.error);});}else{const w=window.open();w.document.body.appendChild(canvas);}});
-});
-
-// Modal logic (edit expense)
-function openEdit(expId){
-const g=currentGroup();const ex=g.expenses.find(x=>x.id===expId);if(!ex)return;
-editingId=expId;
-modal.style.display='flex';
-editPayer.innerHTML='';editCategory.innerHTML='';editParticipants.innerHTML='';
-g.people.forEach(p=>{const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name;editPayer.appendChild(opt);});
-g.categories.forEach(c=>{const opt=document.createElement('option');opt.value=c;opt.textContent=c;editCategory.appendChild(opt);});
-ex.participants.forEach(pid=>{
-const p=g.people.find(x=>x.id===pid);
-if(!p)return;
-const lab=document.createElement('div');lab.className='participant-checkbox';lab.innerHTML=`<label><input type="checkbox" value="${p.id}" checked> ${p.name}</label>`;
-lab.addEventListener('click',()=>{const cb=lab.querySelector('input');cb.checked=!cb.checked;});
-editParticipants.appendChild(lab);
-});
-editPayer.value=ex.payer;editAmount.value=ex.amt;editCategory.value=ex.category;
-}
-
-applyEdit.addEventListener('click',()=>{
-const g=currentGroup();if(!g)return;
-const ex=g.expenses.find(x=>x.id===editingId);if(!ex)return;
-const selectedP=[...editParticipants.querySelectorAll('input[type="checkbox"]:checked')].map(cb=>cb.value);
-if(!selectedP.length){alert('Select participants');return;}
-ex.payer=editPayer.value;ex.amt=Number(editAmount.value);ex.category=editCategory.value;ex.participants=selectedP;
-save();modal.style.display='none';editingId=null;renderAll();
-});
-
-deleteExpenseBtn.addEventListener('click',()=>{
-const g=currentGroup();if(!g)return;
-if(confirm('Delete this expense?')){g.expenses=g.expenses.filter(x=>x.id!==editingId);save();modal.style.display='none';editingId=null;renderAll();}
-});
-
-closeModal.addEventListener('click',()=>{modal.style.display='none';editingId=null;});
-
-renderAll();
+  renderAll();
 })();
 </script>
 </body>
