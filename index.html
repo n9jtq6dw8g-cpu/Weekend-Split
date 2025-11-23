@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Weekend Split — Minimal</title>
 
-<!-- Minimal Inter-like font (system fallback used) -->
 <style>
   :root{
     --bg:#f6f7f9;
@@ -35,8 +34,8 @@
   .row{display:flex;gap:8px}
   .small{font-size:13px;color:var(--muted)}
   .people-list{display:flex;flex-wrap:wrap;gap:8px}
-  .person-chip{padding:6px 10px;background:var(--plate);border-radius:12px;font-weight:600;font-size:13px;border:1px solid rgba(15,23,36,0.03)}
-  .participant-checkbox{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;border:1px solid rgba(15,23,36,0.03);background:#fff}
+  .person-chip{padding:6px 10px;background:var(--plate);border-radius:12px;font-weight:600;font-size:13px;border:1px solid rgba(15,23,36,0.03);cursor:pointer}
+  .participant-checkbox{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;border:1px solid rgba(15,23,36,0.03);background:#fff}
   .participant-checkbox input{margin:0}
   .expense{display:flex;justify-content:space-between;gap:8px;padding:10px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid rgba(15,23,36,0.03);margin-bottom:8px}
   .muted{color:var(--muted);font-size:13px}
@@ -56,9 +55,6 @@
   .category-chip{padding:6px 10px;background:#fff;border-radius:10px;border:1px solid rgba(15,23,36,0.03);font-weight:600;cursor:pointer}
   .modal-back{position:fixed;inset:0;background:rgba(10,12,15,0.45);display:none;align-items:center;justify-content:center;z-index:60}
   .modal{background:var(--card);padding:14px;border-radius:12px;width:min(640px,96%);box-shadow:0 20px 50px rgba(2,6,23,0.4)}
-  /* make participant checkboxes left of name in mobile-friendly chips */
-  .participant-checkbox label { display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
-  .participant-checkbox input[type="checkbox"] { width:18px; height:18px; }
 </style>
 </head>
 <body>
@@ -72,7 +68,7 @@
       </div>
     </div>
     <div class="controls">
-      <button id="resetAll" class="btn ghost tiny">Reset All</button>
+      <!-- Reset All removed as requested -->
     </div>
   </header>
 
@@ -94,7 +90,7 @@
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:700">People</div>
-          <div class="small-muted">Tap a name to remove</div>
+          <div class="small-muted">Tap name to remove</div>
         </div>
         <div style="margin-top:8px;display:flex;gap:8px">
           <input id="personName" type="text" placeholder="Add person (e.g. Ramesh)">
@@ -172,13 +168,24 @@
 
           <div class="small-muted">Net balances</div>
           <div id="summary" style="margin-top:8px"></div>
+
+          <!-- Transfer results (must appear inside summaryWrap so share includes it) -->
+          <div style="height:12px"></div>
+          <div class="small-muted">Transfer flow</div>
+          <div id="transferResultInline" style="margin-top:8px"></div>
+
+          <!-- Reset Entries button (Option 2: inside Summary) -->
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button id="resetEntriesBtn" class="btn ghost tiny" style="flex:1">Reset Entries</button>
+            <button id="copySummary" class="btn tiny" style="flex:1">Copy Summary Text</button>
+          </div>
         </div>
 
         <div style="height:10px"></div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-          <div style="font-weight:700">Transfer flow</div>
-          <div class="small-muted">Choose collector</div>
+          <div style="font-weight:700">Transfer To</div>
+          <div class="small-muted">Choose collector and compute</div>
         </div>
 
         <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
@@ -188,19 +195,18 @@
 
         <div id="transferResult" style="margin-top:12px"></div>
 
-        <div class="note">Logic: Debtors send amounts to the chosen person; that person forwards to creditors.</div>
+        <div class="note">Logic: Debtors send amounts to the chosen person; that person forwards to creditors. The transfer sentences are included in shared images/text.</div>
       </div>
 
       <!-- Actions -->
       <div class="card" style="margin-top:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-weight:700">Quick Actions</div>
+          <div style="font-weight:700">Info</div>
           <div class="small-muted">Local only</div>
         </div>
-        <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
-          <button id="copySummary" class="btn">Copy Summary Text</button>
+        <div style="margin-top:10px">
+          <div class="small-muted">Version 1.5 — Reset Entries clears only expenses (keeps groups/people/categories).</div>
         </div>
-        <div class="footer"><div>Version 1.4</div><div class="small-muted">Local only • No files</div></div>
       </div>
     </div>
   </div>
@@ -235,7 +241,7 @@
 
 <script>
 (function(){
-  const STORAGE_KEY = 'ws_final_v2';
+  const STORAGE_KEY = 'ws_final_v3';
   const uid = ()=> Math.random().toString(36).slice(2,9);
 
   // DOM refs
@@ -259,11 +265,12 @@
   const computeTransfer = el('computeTransfer');
   const transferResult = el('transferResult');
   const shareBtn = el('shareBtn');
-  const resetAll = el('resetAll');
   const catName = el('catName');
   const addCat = el('addCat');
   const catList = el('catList');
   const copySummary = el('copySummary');
+  const resetEntriesBtn = el('resetEntriesBtn');
+  const transferResultInline = el('transferResultInline');
 
   const modal = el('modal');
   const closeModal = el('closeModal');
@@ -363,7 +370,7 @@
   });
   clearExpense.addEventListener('click', ()=>{ amountInput.value=''; participantsDiv.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false); });
 
-  // Edit modal logic
+  // Edit modal
   function openEdit(eid){
     const g = currentGroup(); const ex = g.expenses.find(x=>x.id===eid); if(!ex) return;
     editingId = eid; modal.style.display='flex';
@@ -371,7 +378,7 @@
     g.people.forEach(p=>{ const o = document.createElement('option'); o.value=p.id; o.textContent=p.name; if(p.id===ex.payer) o.selected=true; editPayer.appendChild(o); });
     g.categories.forEach(c=>{ const o = document.createElement('option'); o.value=c; o.textContent=c; if(c===ex.category) o.selected=true; editCategory.appendChild(o); });
     editAmount.value = ex.amt;
-    g.people.forEach(p=>{ const lab=document.createElement('label'); lab.className='participant-checkbox'; lab.innerHTML = `<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`; editParticipants.appendChild(lab); });
+    g.people.forEach(p=>{ const lab=document.createElement('div'); lab.className='participant-checkbox'; lab.innerHTML = `<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`; editParticipants.appendChild(lab); });
     editParticipants.querySelectorAll('input[type=checkbox]').forEach(cb=> cb.checked = ex.participants.includes(cb.value));
   }
   closeModal.addEventListener('click', ()=>{ modal.style.display='none'; editingId=null; });
@@ -409,7 +416,7 @@
       const chip = document.createElement('div'); chip.className='person-chip'; chip.textContent=p.name; chip.dataset.pid=p.id; chip.title='Tap to remove';
       peopleList.appendChild(chip);
       const opt = document.createElement('option'); opt.value=p.id; opt.textContent=p.name; payerSelect.appendChild(opt);
-      // participant checkbox (with input on left)
+      // participant checkbox (input left of name)
       const lab = document.createElement('div'); lab.className='participant-checkbox';
       lab.innerHTML = `<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
       participantsDiv.appendChild(lab);
@@ -479,7 +486,8 @@
   }
 
   function renderSummary(){
-    const g = currentGroup(); summaryDiv.innerHTML=''; categoryTotalsDiv.innerHTML=''; transferResult.innerHTML='';
+    const g = currentGroup(); summaryDiv.innerHTML=''; categoryTotalsDiv.innerHTML='';
+    transferResultInline.innerHTML = ''; // cleared here; computeTransfer fills it
     if(!g) return;
     const ct = computeCategoryTotals();
     Object.keys(ct).forEach(c=>{ const row=document.createElement('div'); row.className='summary-row'; row.innerHTML=`<div>${c}</div><div class="badge">₹${ct[c]||0}</div>`; categoryTotalsDiv.appendChild(row); });
@@ -508,14 +516,14 @@
     const ops = [];
     let totalToReceive = 0;
     debtors.forEach(d=>{
-      if(d.id === toId) return; // if toId owes, skip here (they won't pay themselves)
+      if(d.id === toId) return; // if toId owes, skip here
       ops.push({ from: d.id, to: toId, amt: d.amt });
       totalToReceive += d.amt;
     });
-    // Now compute toId's new amount
+    // toId's new amount
     const toInitial = bal[toId] || 0;
     const toAfter = toInitial + totalToReceive;
-    // Now, toId forwards to other creditors (excluding toId)
+    // toId forwards to other creditors (excluding toId)
     const otherCreds = creditors.filter(c=>c.id !== toId).map(c=>({...c}));
     let remaining = toAfter;
     otherCreds.forEach(c=>{
@@ -523,76 +531,66 @@
       const pay = Math.min(remaining, c.amt);
       if(pay>0){ ops.push({ from: toId, to: c.id, amt: pay }); remaining -= pay; }
     });
+
+    // render results both in transferResult (detailed) and in transferResultInline (inside summaryWrap for share)
     renderTransferOpsSimple(ops, g);
+    renderTransferInline(ops, g);
   });
 
   function renderTransferOpsSimple(ops, g){
     transferResult.innerHTML='';
     if(!ops.length){ transferResult.innerHTML = '<div class="small-muted">Nothing to transfer — settled</div>'; return; }
     const map = {}; g.people.forEach(p=> map[p.id]=p.name);
-    // aggregate same from->to
     const agg = {};
     ops.forEach(o=>{ const k = o.from+'|'+o.to; agg[k] = (agg[k]||0) + o.amt; });
-    // Create readable sentences
-    // First: check if all ops are of form debtor -> selected, then selected -> creditors
-    // We'll form sentences:
-    // "Everyone pays <collector>." and then "<collector> transfers X to Y." where applicable.
-    // Identify collector as the 'to' target which receives from many debtors (heuristic)
-    const receivers = {};
-    const senders = {};
-    Object.keys(agg).forEach(k=>{
-      const [from,to] = k.split('|'); const amt = agg[k];
-      receivers[to] = receivers[to] || []; receivers[to].push({from, amt});
-      senders[from] = senders[from] || []; senders[from].push({to, amt});
-    });
-
-    // Build UI list (rows) plus sentences
-    const sentences = [];
-    // Find main collector: the one who receives from multiple debtors (or the most)
-    let collector = null;
-    let maxReceive = 0;
-    for(const r in receivers){
-      const total = receivers[r].reduce((s,it)=>s+it.amt,0);
-      if(total > maxReceive){ maxReceive = total; collector = r; }
-    }
-    // If collector present and received from at least one debtor:
-    if(collector){
-      sentences.push(`Everyone pays ${map[collector]}.`);
-    }
-    // Render aggregated ops as rows and also produce second-line sentences for collector forwards
-    const forwardOps = []; // ops where from == collector
-    Object.keys(agg).forEach(k=>{
-      const [from,to] = k.split('|'); const amt = agg[k];
-      if(from === collector && to !== collector){ forwardOps.push({from,to,amt}); }
-    });
-    // Build transfer rows in the output:
-    // First show all ops: debtor -> collector (we'll show aggregated list)
-    // Show rows grouped by from->to
     Object.keys(agg).forEach(k=>{
       const [from,to] = k.split('|'); const amt = agg[k];
       const row = document.createElement('div'); row.className='summary-row';
       row.innerHTML = `<div>${map[from] || '?'} → ${map[to] || '?'}</div><div class="badge">₹${amt}</div>`;
       transferResult.appendChild(row);
     });
-    // Build sentences for forwards (collector pays others)
-    forwardOps.forEach(op=>{
-      sentences.push(`${map[collector]} transfers ₹${op.amt} to ${map[op.to]}.`);
-    });
-    // If no forward ops but collector exists, still show a sentence if other creditors exist
-    if(collector && forwardOps.length===0){
-      // if there are creditors other than collector, and collector had positive toForward, show sentence
-      // but to keep it simple, only list forwardOps sentences which exist
-    }
+  }
 
-    // Add sentences block below rows
+  function renderTransferInline(ops, g){
+    transferResultInline.innerHTML = '';
+    if(!ops.length){ transferResultInline.innerHTML = '<div class="small-muted">Nothing to transfer — settled</div>'; return; }
+    const map = {}; g.people.forEach(p=> map[p.id]=p.name);
+    // aggregate
+    const agg = {};
+    ops.forEach(o=>{ const k = o.from+'|'+o.to; agg[k] = (agg[k]||0) + o.amt; });
+    // compute sentences: "Everyone pays <collector>." then "<collector> transfers X to Y."
+    // Infer collector by seeing the target who receives from debtors (most receive)
+    const receivers = {};
+    Object.keys(agg).forEach(k=>{
+      const [from,to] = k.split('|'); const amt = agg[k];
+      receivers[to] = receivers[to] || 0; receivers[to] += amt;
+    });
+    let collector = null; let maxRecv = 0;
+    Object.keys(receivers).forEach(r=>{ if(receivers[r] > maxRecv){ maxRecv = receivers[r]; collector = r; } });
+    const sentences = [];
+    if(collector) sentences.push(`Everyone pays ${map[collector]}.`);
+    // push all aggregated ops into rows and collect forward ops
+    const forwardOps = [];
+    Object.keys(agg).forEach(k=>{
+      const [from,to] = k.split('|'); const amt = agg[k];
+      if(from === collector && to !== collector) forwardOps.push({from,to,amt});
+    });
+    // render rows (small)
+    Object.keys(agg).forEach(k=>{
+      const [from,to] = k.split('|'); const amt = agg[k];
+      const row = document.createElement('div'); row.className='summary-row';
+      row.innerHTML = `<div>${map[from] || '?'} → ${map[to] || '?'}</div><div class="badge">₹${amt}</div>`;
+      transferResultInline.appendChild(row);
+    });
+    forwardOps.forEach(op=> sentences.push(`${map[collector]} transfers ₹${op.amt} to ${map[op.to]}.`));
     if(sentences.length){
-      const sblock = document.createElement('div'); sblock.style.marginTop = '8px'; sblock.style.fontSize = '13px';
+      const sblock = document.createElement('div'); sblock.style.marginTop='8px'; sblock.style.fontSize='13px';
       sentences.forEach(s=>{ const p = document.createElement('div'); p.textContent = s; sblock.appendChild(p); });
-      transferResult.appendChild(sblock);
+      transferResultInline.appendChild(sblock);
     }
   }
 
-  // Share summary as image
+  // Share summary as image (includes summaryWrap which contains category totals, balances and inline transfer text)
   el('shareBtn').addEventListener('click', async ()=>{
     const wrap = el('summaryWrap');
     if(!wrap) return;
@@ -617,7 +615,7 @@
     }
   });
 
-  // Copy textual summary
+  // Copy textual summary (includes inline transfer sentences if computed and present in transferResultInline)
   copySummary.addEventListener('click', ()=>{
     const g = currentGroup(); if(!g) return;
     const bal = computeBalances(); const ct = computeCategoryTotals();
@@ -625,16 +623,17 @@
     Object.keys(ct).forEach(c=> s += `${c}: ₹${ct[c]}\n`);
     s += `\nBalances:\n`;
     g.people.forEach(p=> s += `${p.name}: ₹${Math.round(bal[p.id]||0)}\n`);
+    // If transferResultInline has text sentences, append them
+    const inlineText = transferResultInline.innerText.trim();
+    if(inlineText) s += `\nTransfers:\n${inlineText}\n`;
     if(navigator.clipboard) navigator.clipboard.writeText(s).then(()=> alert('Summary copied to clipboard'));
   });
 
-  // Reset all
-  resetAll.addEventListener('click', ()=>{
-    if(!confirm('Clear all groups & data?')) return;
-    data = { groups: [] };
-    const gid = uid();
-    data.groups.push({id:gid,name:'My Group',people:[],categories:['Food','Entertainment','Fuel','Shopping'],expenses:[]});
-    currentGroupId = gid; save(); renderAll();
+  // Reset Entries (clears only current group's expenses)
+  resetEntriesBtn.addEventListener('click', ()=>{
+    const g = currentGroup(); if(!g) return;
+    if(!confirm('Clear all expenses for this group? This will keep people and categories.')) return;
+    g.expenses = []; save(); renderAll();
   });
 
   // Utility: render transferTo select
@@ -647,8 +646,11 @@
   // initial render
   renderAll();
 
-  // Expose openEdit for buttons created earlier
+  // Expose openEdit for buttons
   window.openEdit = openEdit;
+
+  // ensure save on unload
+  window.addEventListener('beforeunload', ()=> save());
 
 })();
 </script>
