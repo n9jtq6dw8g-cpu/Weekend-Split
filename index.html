@@ -110,7 +110,6 @@ button {
 </head>
 <body>
 
-<!-- TITLE -->
 <div style="text-align:center; padding: 15px 0; font-size: 24px; font-weight: 700;">
     Spendsplit
 </div>
@@ -136,6 +135,9 @@ button {
         <input id="entryName" placeholder="Entry name">
         <input id="entryAmount" type="number" placeholder="Amount">
         <select id="entryCategory"></select>
+
+        <h3>Payer</h3>
+        <select id="entryPayer"></select>
 
         <h3>Participants</h3>
         <div id="participantSelect"></div>
@@ -173,283 +175,218 @@ button {
 /* -----------------------
    DATA STORAGE
 ----------------------- */
-
 let data = {
-    groups: ["Default"],
+    groups: [
+        { name: "Default", people: ["Jack", "Rose"] }
+    ],
     activeGroup: "Default",
-    people: ["Jack", "Rose"],
     categories: ["Food", "Entertainment", "Fuel", "Shopping"],
     entries: []
 };
 
-function save() { localStorage.setItem("spendsplit", JSON.stringify(data)); }
-function load() {
-    let d = localStorage.getItem("spendsplit");
-    if (d) data = JSON.parse(d);
-}
+function save(){ localStorage.setItem("spendsplit", JSON.stringify(data)); }
+function load(){ let d=localStorage.getItem("spendsplit"); if(d) data=JSON.parse(d); }
 load();
+
+/* -----------------------
+   UTILS
+----------------------- */
+function getActiveGroup(){ return data.groups.find(g=>g.name===data.activeGroup); }
+function getActivePeople(){ let g=getActiveGroup(); return g ? g.people : []; }
 
 /* -----------------------
    TAB HANDLING
 ----------------------- */
-
-function showTab(tab, el) {
-    document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
-    document.getElementById(tab).style.display = 'block';
-
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+function showTab(tab, el){
+    document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+    document.getElementById(tab).style.display='block';
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     el.classList.add('active');
-
     if(tab==='base') refreshBase();
     if(tab==='entries') refreshEntriesUI();
     if(tab==='summary') refreshSummary();
 }
-
-document.getElementById("base").style.display = "block";
+document.getElementById("base").style.display="block";
 
 /* -----------------------
    ACCORDION
 ----------------------- */
-function toggleAcc(header, id) {
-    header.classList.toggle("active");
-    let box = document.getElementById(id);
-    box.style.display = box.style.display === "block" ? "none" : "block";
-}
+function toggleAcc(header,id){ header.classList.toggle("active"); let box=document.getElementById(id); box.style.display=box.style.display==='block'?'none':'block'; }
 
 /* -----------------------
    REFRESH UI
 ----------------------- */
-function refreshAll() { load(); refreshBase(); refreshEntriesUI(); refreshSummary(); }
+function refreshAll(){ load(); refreshBase(); refreshEntriesUI(); refreshSummary(); }
 
 /* -----------------------
    BASE TAB
 ----------------------- */
-function refreshBase() { refreshGroups(); refreshPeople(); refreshCategories(); }
+function refreshBase(){ refreshGroups(); refreshPeople(); refreshCategories(); }
 
 /* -----------------------
    GROUPS
 ----------------------- */
-function refreshGroups() {
-    let box = document.getElementById("groupsAcc");
-    box.innerHTML = `
-        <div><b>Active Group:</b> ${data.activeGroup}</div>
-        <input id="newGroupName" placeholder="New group">
-        <button class="btn" onclick="addGroup()">Add</button>
-    `;
-
-    data.groups.forEach(g => {
-        box.innerHTML += `
-        <div class="people-item">
-            <div>${g}</div>
+function refreshGroups(){
+    let box=document.getElementById("groupsAcc");
+    box.innerHTML=`<div><b>Active Group:</b> ${data.activeGroup}</div>
+    <input id="newGroupName" placeholder="New group">
+    <button class="btn" onclick="addGroup()">Add</button>`;
+    data.groups.forEach(g=>{
+        box.innerHTML+=`<div class="people-item">
+            <div>${g.name}</div>
             <div>
-                <button onclick="setGroup('${g}')">Use</button>
-                <button class="btn red" onclick="removeGroup('${g}')">X</button>
+                <button onclick="setGroup('${g.name}')">Use</button>
+                <button class="btn red" onclick="removeGroup('${g.name}')">X</button>
             </div>
         </div>`;
     });
 }
 
-function addGroup() {
-    let name = document.getElementById("newGroupName").value.trim();
-    if(!name || data.groups.includes(name)) return;
-    data.groups.push(name);
+function addGroup(){
+    let name=document.getElementById("newGroupName").value.trim();
+    if(!name || data.groups.find(g=>g.name===name)) return;
+    data.groups.push({name, people:[]});
     save(); refreshGroups();
 }
 
-function setGroup(g) {
-    data.activeGroup = g; save(); refreshBase(); refreshEntriesUI(); refreshSummary();
-}
+function setGroup(name){ data.activeGroup=name; save(); refreshBase(); refreshEntriesUI(); refreshSummary(); }
 
-function removeGroup(g) {
-    data.groups = data.groups.filter(x => x!==g);
-    if(data.activeGroup===g) data.activeGroup = data.groups[0] || "Default";
+function removeGroup(name){
+    data.groups=data.groups.filter(g=>g.name!==name);
+    if(data.activeGroup===name) data.activeGroup=data.groups[0]?.name||"Default";
     save(); refreshGroups(); refreshEntriesUI(); refreshSummary();
 }
 
 /* -----------------------
    PEOPLE
 ----------------------- */
-function refreshPeople() {
-    let box = document.getElementById("peopleAcc");
-    box.innerHTML = `
-        <input id="newPerson" placeholder="New person">
-        <button class="btn" onclick="addPerson()">Add</button>
-    `;
-    data.people.forEach(p => {
-        box.innerHTML += `
-        <div class="people-item">
-            <div>${p}</div>
-            <button class="btn red" onclick="removePerson('${p}')">X</button>
-        </div>`;
+function refreshPeople(){
+    let box=document.getElementById("peopleAcc");
+    box.innerHTML=`<input id="newPerson" placeholder="New person"><button class="btn" onclick="addPerson()">Add</button>`;
+    getActivePeople().forEach(p=>{
+        box.innerHTML+=`<div class="people-item"><div>${p}</div>
+        <button class="btn red" onclick="removePerson('${p}')">X</button></div>`;
     });
 }
 
-function addPerson() {
-    let n = document.getElementById("newPerson").value.trim();
-    if(!n || data.people.includes(n)) return;
-    data.people.push(n);
+function addPerson(){
+    let n=document.getElementById("newPerson").value.trim();
+    let people=getActivePeople();
+    if(!n || people.includes(n)) return;
+    people.push(n);
     save(); refreshPeople(); refreshParticipants();
 }
 
-function removePerson(n) {
-    data.people = data.people.filter(x => x!==n);
+function removePerson(n){
+    let people=getActivePeople();
+    data.groups.find(g=>g.name===data.activeGroup).people=people.filter(p=>p!==n);
     save(); refreshPeople(); refreshParticipants();
 }
 
 /* -----------------------
    CATEGORIES
 ----------------------- */
-function refreshCategories() {
-    let box = document.getElementById("catAcc");
-    box.innerHTML = `
-        <input id="newCat" placeholder="New category">
-        <button class="btn" onclick="addCategory()">Add</button>
-    `;
-    data.categories.forEach(c => {
-        box.innerHTML += `
-        <div class="category-item">
-            <div>${c}</div>
-            <button class="btn red" onclick="removeCategory('${c}')">X</button>
-        </div>`;
+function refreshCategories(){
+    let box=document.getElementById("catAcc");
+    box.innerHTML=`<input id="newCat" placeholder="New category"><button class="btn" onclick="addCategory()">Add</button>`;
+    data.categories.forEach(c=>{
+        box.innerHTML+=`<div class="category-item"><div>${c}</div>
+        <button class="btn red" onclick="removeCategory('${c}')">X</button></div>`;
     });
-    document.getElementById("entryCategory").innerHTML = data.categories.map(c=>`<option>${c}</option>`).join("");
+    document.getElementById("entryCategory").innerHTML=data.categories.map(c=>`<option>${c}</option>`).join("");
 }
 
-function addCategory() {
-    let c = document.getElementById("newCat").value.trim();
-    if(!c || data.categories.includes(c)) return;
-    data.categories.push(c);
-    save(); refreshCategories();
-}
-
-function removeCategory(c) {
-    data.categories = data.categories.filter(x=>x!==c);
-    save(); refreshCategories();
-}
+function addCategory(){ let c=document.getElementById("newCat").value.trim(); if(!c||data.categories.includes(c)) return; data.categories.push(c); save(); refreshCategories(); }
+function removeCategory(c){ data.categories=data.categories.filter(x=>x!==c); save(); refreshCategories(); }
 
 /* -----------------------
-   PARTICIPANTS
+   PARTICIPANTS & PAYER
 ----------------------- */
-function refreshParticipants() {
-    let box = document.getElementById("participantSelect");
-    box.innerHTML = "";
-    data.people.forEach(p=>{
-        let id = "chk_"+p;
-        box.innerHTML += `
-        <div class="entry-item" onclick="toggleCheck('${id}')">
+function refreshParticipants(){
+    let people=getActivePeople();
+    let box=document.getElementById("participantSelect"); box.innerHTML="";
+    people.forEach(p=>{
+        let id="chk_"+p;
+        box.innerHTML+=`<div class="entry-item" onclick="toggleCheck('${id}')">
             <div class="checkbox-left">
                 <input type="checkbox" id="${id}" onclick="event.stopPropagation()">
                 <span>${p}</span>
             </div>
         </div>`;
     });
+    // Payer dropdown
+    let payerSelect=document.getElementById("entryPayer");
+    payerSelect.innerHTML=people.map(p=>`<option>${p}</option>`).join("");
 }
 
-function toggleCheck(id){
-    let c=document.getElementById(id);
-    c.checked = !c.checked;
-}
+function toggleCheck(id){ let c=document.getElementById(id); c.checked=!c.checked; }
 
 /* -----------------------
    ENTRIES
 ----------------------- */
-function addEntry() {
+function addEntry(){
     let name=document.getElementById("entryName").value.trim();
     let amt=parseInt(document.getElementById("entryAmount").value);
     let cat=document.getElementById("entryCategory").value;
-    let ppl = data.people.filter(p=>document.getElementById("chk_"+p).checked);
-
-    if(!name || !amt || ppl.length===0) return;
-
-    data.entries.push({ group:data.activeGroup, name, amount:Math.round(amt), category:cat, people:ppl });
+    let ppl=getActivePeople().filter(p=>document.getElementById("chk_"+p).checked);
+    let payer=document.getElementById("entryPayer").value;
+    if(!name||!amt||ppl.length===0||!payer) return;
+    data.entries.push({ group:data.activeGroup, name, amount:Math.round(amt), category:cat, people:ppl, payer });
     save(); refreshEntriesUI(); refreshSummary();
 }
 
-function refreshEntriesUI() {
+function refreshEntriesUI(){
     refreshParticipants();
     let list=document.getElementById("entriesList");
     list.innerHTML="";
     data.entries.filter(e=>e.group===data.activeGroup).forEach(e=>{
         let idx=data.entries.indexOf(e);
-        list.innerHTML+=`
-        <div class="entry-item">
-            <div>${e.name} — ₹${e.amount}</div>
+        list.innerHTML+=`<div class="entry-item">
+            <div>${e.name} — ₹${e.amount} (Paid by ${e.payer})</div>
             <button class="btn red" onclick="deleteEntry(${idx})">X</button>
         </div>`;
     });
 }
 
-function deleteEntry(i){
-    data.entries.splice(i,1);
-    save(); refreshEntriesUI(); refreshSummary();
-}
+function deleteEntry(i){ data.entries.splice(i,1); save(); refreshEntriesUI(); refreshSummary(); }
 
 /* -----------------------
    SUMMARY
 ----------------------- */
-function refreshSummary() { updateSummary(); }
+function refreshSummary(){ updateSummary(); }
 
 function updateSummary(){
     let box=document.getElementById("summaryBox");
     let groupEntries=data.entries.filter(e=>e.group===data.activeGroup);
-
-    if(groupEntries.length===0){
-        box.innerHTML="No entries.";
-        document.getElementById("transferSelect").innerHTML="";
-        return;
-    }
-
+    if(groupEntries.length===0){ box.innerHTML="No entries."; return; }
+    let people=getActivePeople();
     let totals={};
-    data.people.forEach(p=>totals[p]=0);
-
+    people.forEach(p=>totals[p]=0);
     groupEntries.forEach(e=>{
         let share=Math.round(e.amount/e.people.length);
-        e.people.forEach(p=>totals[p]+=share);
+        e.people.forEach(p=>{ if(p!==e.payer) totals[p]+=share; });
     });
-
-    if(!document.getElementById("transferSelect").value){
-        document.getElementById("transferSelect").innerHTML = data.people.map(p=>`<option>${p}</option>`).join("");
-    }
-
-    let payer = document.getElementById("transferSelect").value || data.people[0];
-
-    let html="<b>Totals:</b><br>";
-    data.people.forEach(p=>html+=`${p}: ₹${totals[p]}<br>`);
-
-    let result=`<br><b>Transfer:</b><br>Everyone pays to ${payer}.<br>`;
-    data.people.forEach(p=>{
-        if(p!==payer && totals[p]<totals[payer]){
-            let diff = totals[payer]-totals[p];
-            if(diff>0) result+=`${p} pays ₹${diff} to ${payer}<br>`;
-        }
+    let html="<b>Totals owed to each payer:</b><br>";
+    groupEntries.forEach(e=>{
+        html+=`${e.payer} paid ₹${e.amount} for ${e.people.join(', ')}<br>`;
     });
-
-    box.innerHTML = html+result;
+    html+="<br><b>Individual owes:</b><br>";
+    people.forEach(p=>html+=`${p}: ₹${totals[p]}<br>`);
+    box.innerHTML=html;
 }
 
 /* -----------------------
    COPY / SHARE / RESET
 ----------------------- */
-function copySummary() {
-    navigator.clipboard.writeText(document.getElementById("summaryBox").innerText)
-        .then(()=>alert("Copied!"))
-        .catch(()=>alert("Copy failed."));
-}
+function copySummary(){ navigator.clipboard.writeText(document.getElementById("summaryBox").innerText).then(()=>alert("Copied!")).catch(()=>alert("Copy failed.")); }
 
-async function shareSummary() {
+async function shareSummary(){
     let text=document.getElementById("summaryBox").innerText;
-    if(navigator.share){
-        try{ await navigator.share({text}); }
-        catch(e){ console.error(e); }
-    } else {
-        alert("Sharing not supported in this browser.");
-    }
+    if(navigator.share){ try{ await navigator.share({text}); }catch(e){console.error(e);} }
+    else alert("Sharing not supported in this browser.");
 }
 
-function resetEntries(){
-    data.entries = data.entries.filter(e=>e.group!==data.activeGroup);
-    save(); refreshEntriesUI(); refreshSummary();
-}
+function resetEntries(){ data.entries=data.entries.filter(e=>e.group!==data.activeGroup); save(); refreshEntriesUI(); refreshSummary(); }
 
 refreshAll();
 </script>
