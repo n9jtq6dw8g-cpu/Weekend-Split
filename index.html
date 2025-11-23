@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekend Split</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Inter', sans-serif; margin: 0; background: #f7f8fa; color: #222; padding: 20px; }
+    h1 { font-size: 26px; font-weight: 600; text-align: center; margin-bottom: 20px; }
+    .card { background: #fff; padding: 18px 20px; border-radius: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    label { display: block; font-size: 14px; margin-bottom: 6px; font-weight: 500; }
+    input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; background: #fafafa; }
+    button { width: 100%; padding: 14px; background: #111; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 500; margin-top: 8px; cursor: pointer; }
+    button:active { opacity: 0.8; }
+    .person-chip { display: inline-block; padding: 6px 12px; background: #eee; border-radius: 20px; margin: 4px; font-size: 14px; }
+    .expense-item { padding: 10px 0; border-bottom: 1px solid #efefef; }
+    .summary { font-size: 16px; padding: 10px 0; }
+</style>
+</head>
+<body>
+<h1>Weekend Split</h1>
+<div class="card">
+    <h2 style="font-size:18px; margin:0 0 10px 0;">Add Person</h2>
+    <input id="personName" placeholder="Enter name" />
+    <button onclick="addPerson()">Add Person</button>
+    <div id="peopleList"></div>
+</div>
+<div class="card">
+    <h2 style="font-size:18px; margin:0 0 10px 0;">Add Expense</h2>
+    <label>Payer</label>
+    <select id="payer"></select>
+    <label>Amount</label>
+    <input id="amount" type="number" placeholder="0" />
+    <label>Select Participants</label>
+    <div id="participants"></div>
+    <button onclick="addExpense()">Add Expense</button>
+</div>
+<div class="card">
+    <h2 style="font-size:18px; margin:0 0 10px 0;">Expenses</h2>
+    <div id="expenseList"></div>
+</div>
+<div class="card">
+    <h2 style="font-size:18px; margin:0 0 10px 0;">Summary</h2>
+    <div id="summary"></div>
+</div>
+<script>
+    let people = [];
+    let expenses = [];
+    function refreshUI() {
+        const peopleList = document.getElementById("peopleList");
+        const payer = document.getElementById("payer");
+        const participantsDiv = document.getElementById("participants");
+        peopleList.innerHTML = ""; payer.innerHTML = ""; participantsDiv.innerHTML = "";
+        people.forEach(p => {
+            peopleList.innerHTML += `<span class='person-chip'>${p}</span>`;
+            payer.innerHTML += `<option>${p}</option>`;
+            participantsDiv.innerHTML += `
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" value="${p}" /> ${p}
+                </label>`;
+        });
+    }
+    function addPerson() {
+        const name = document.getElementById("personName").value.trim();
+        if (!name) return;
+        people.push(name);
+        document.getElementById("personName").value = "";
+        refreshUI();
+    }
+    function addExpense() {
+        const payer = document.getElementById("payer").value;
+        const amount = parseFloat(document.getElementById("amount").value);
+        if (!payer || !amount) return;
+        const participantBoxes = document.querySelectorAll("#participants input:checked");
+        const participants = Array.from(participantBoxes).map(p => p.value);
+        if (participants.length === 0) return;
+        expenses.push({ payer, amount, participants });
+        document.getElementById("amount").value = "";
+        updateExpenseList();
+        updateSummary();
+    }
+    function updateExpenseList() {
+        const div = document.getElementById("expenseList");
+        div.innerHTML = "";
+        expenses.forEach(e => {
+            div.innerHTML += `
+                <div class="expense-item">
+                    <strong>${e.payer}</strong> paid ₹${e.amount}<br>
+                    Split among: ${e.participants.join(", ")}
+                </div>`;
+        });
+    }
+    function updateSummary() {
+        const summary = {};
+        people.forEach(p => summary[p] = 0);
+        expenses.forEach(e => {
+            const split = e.amount / e.participants.length;
+            e.participants.forEach(p => summary[p] -= split);
+            summary[e.payer] += e.amount;
+        });
+        const div = document.getElementById("summary");
+        div.innerHTML = "";
+        for (const p in summary) {
+            div.innerHTML += `<div class="summary"><strong>${p}</strong>: ₹${summary[p].toFixed(2)}</div>`;
+        }
+    }
+</script>
+</body>
+</html>
