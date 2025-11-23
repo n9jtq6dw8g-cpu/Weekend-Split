@@ -1,438 +1,589 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Spendsplit</title>
-
 <style>
-    body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
-        background: #f2f2f7;
-        color: #111;
-    }
-
-    /* Liquid Glass Card */
-    .card {
-        backdrop-filter: blur(14px) saturate(180%);
-        -webkit-backdrop-filter: blur(14px) saturate(180%);
-        background: rgba(255, 255, 255, 0.55);
-        border-radius: 22px;
-        padding: 18px;
-        margin: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 4px 18px rgba(0,0,0,0.05);
-    }
-
-    .title {
-        text-align: center;
-        padding: 18px 0 2px 0;
-        font-size: 26px;
-        font-weight: 700;
-        backdrop-filter: blur(6px);
-    }
-
-    .tabs {
-        display: flex;
-        margin: 16px;
-        gap: 8px;
-    }
-
-    .tab {
-        flex: 1;
-        padding: 12px;
-        text-align: center;
-        background: white;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: 0.2s;
-        font-weight: 500;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.06);
-    }
-
-    .tab.active {
-        background: #007aff;
-        color: white;
-        font-weight: 600;
-    }
-
-    .section {
-        display: none;
-    }
-
-    .section.active {
-        display: block;
-        animation: fade 0.25s ease;
-    }
-
-    @keyframes fade {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .row {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 0;
-        align-items: center;
-    }
-
-    .list-item {
-        padding: 10px 0;
-        border-bottom: 1px solid #ddd;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .list-item:last-child {
-        border-bottom: none;
-    }
-
-    button {
-        width: 100%;
-        padding: 12px;
-        margin-top: 8px;
-        border: none;
-        border-radius: 12px;
-        font-size: 16px;
-        cursor: pointer;
-        font-weight: 600;
-        background: #007aff;
-        color: white;
-    }
-
-    button.secondary {
-        background: #e5e5ea;
-        color: #000;
-    }
-
-    .footer-actions {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        margin-top: 16px;
-    }
-
-    .footer-actions button {
-        flex: 1;
-        font-size: 14px;
-        padding: 10px;
-    }
-
+  :root{
+    --bg:#eef3f7;
+    --card: rgba(255,255,255,0.6);
+    --muted:#6b7280;
+    --accent:#0f1724;
+    --glass-border: rgba(255,255,255,0.6);
+    --glass-shadow: rgba(10,20,30,0.06);
+    --success:#10b981;
+    --danger:#ef4444;
+  }
+  *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#f7f9fb,#eef3f7);color:var(--accent);-webkit-font-smoothing:antialiased}
+  .app{max-width:980px;margin:18px auto;padding:18px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(180deg,#ffffffcc,#f0f4f9cc);display:flex;align-items:center;justify-content:center;font-weight:800;border:1px solid var(--glass-border);box-shadow:0 6px 18px var(--glass-shadow);backdrop-filter:blur(8px)}
+  h1{margin:0;font-size:20px}
+  nav.tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tab{flex:1;padding:10px 12px;border-radius:12px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.6)}
+  .tab.active{background:#fff;border:1px solid rgba(0,0,0,0.08);box-shadow:0 6px 18px rgba(10,20,30,0.04)}
+  .main { display:grid; grid-template-columns:1fr 420px; gap:16px; align-items:start;}
+  @media(max-width:980px){ .main{ grid-template-columns:1fr } }
+  .card { background: var(--card); border-radius:14px; padding:14px; border:1px solid var(--glass-border); box-shadow:0 8px 30px var(--glass-shadow); backdrop-filter: blur(10px) saturate(120%); }
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  input[type="text"], input[type="number"], select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(15,23,36,0.06);background:rgba(255,255,255,0.7);font-size:14px;outline:none}
+  .row{display:flex;gap:8px}
+  .btn{background:var(--accent);color:#fff;border:none;padding:10px 12px;border-radius:10px;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(15,23,36,0.06)}
+  .tiny{padding:6px 8px;border-radius:8px;font-size:13px}
+  .muted{color:var(--muted);font-size:13px}
+  .accordion{margin-bottom:8px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.04)}
+  .acc-header{display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.45);cursor:pointer}
+  .acc-body{padding:12px;background:rgba(255,255,255,0.55);display:none}
+  .acc-body.open{display:block}
+  .list-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;margin-bottom:8px;background:linear-gradient(180deg,#ffffff,#fafcff);border:1px solid rgba(0,0,0,0.03)}
+  .person-chip{padding:8px 10px;border-radius:10px;background:linear-gradient(180deg,#ffffffa8,#f3f6f9a8);border:1px solid rgba(255,255,255,0.6);font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(10,20,30,0.03)}
+  .participant-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;border:1px solid rgba(15,23,36,0.04);background:rgba(255,255,255,0.8);cursor:pointer}
+  .expenses-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;max-height:340px;overflow:auto}
+  .expense-item{display:flex;justify-content:space-between;gap:8px;padding:12px;border-radius:10px;background:linear-gradient(180deg,#ffffff,#fafcff);border:1px solid rgba(15,23,36,0.03)}
+  .summary-row{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.6);margin-bottom:8px;border:1px solid rgba(255,255,255,0.6)}
+  .positive{color:var(--success);font-weight:700}
+  .negative{color:var(--danger);font-weight:700}
+  .transfer-rows{margin-top:10px}
+  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+  .actions-line{display:flex;gap:8px;margin-top:12px}
+  .actions-line button{flex:1}
+  .small-muted{font-size:12px;color:var(--muted)}
+  /* participant checkbox size */
+  .participant-row input[type=checkbox]{width:18px;height:18px;margin:0}
 </style>
 </head>
-
 <body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">SS</div>
+        <div>
+          <h1>Spendsplit</h1>
+        </div>
+      </div>
+      <!-- small visible mockup preview (optional) -->
+      <div style="display:none">
+        <img src="/mnt/data/A_digital_wireframe_mockup_of_a_mobile_application.png" alt="mock" style="width:120px;height:80px;border-radius:8px">
+      </div>
+    </header>
 
-<div class="title">Spendsplit</div>
+    <!-- tabs -->
+    <nav class="tabs">
+      <div class="tab active" id="tab-base" onclick="showTab('base')">Base</div>
+      <div class="tab" id="tab-entries" onclick="showTab('entries')">Entries</div>
+      <div class="tab" id="tab-summary" onclick="showTab('summary')">Summary</div>
+    </nav>
 
-<div class="tabs">
-    <div class="tab active" onclick="switchTab('groups')">Groups</div>
-    <div class="tab" onclick="switchTab('people')">People</div>
-    <div class="tab" onclick="switchTab('categories')">Categories</div>
-    <div class="tab" onclick="switchTab('entries')">Add Entry</div>
-    <div class="tab" onclick="switchTab('summary')">Summary</div>
-</div>
+    <div class="main">
+      <!-- Left-column: Base or Entries depending on tab -->
+      <section id="left" >
+        <!-- BASE (Accordion) -->
+        <div id="base" class="card">
+          <!-- Groups accordion -->
+          <div class="accordion">
+            <div class="acc-header" onclick="toggleAcc(this)">
+              <div><strong>Groups</strong></div>
+              <div class="small-muted">Manage</div>
+            </div>
+            <div class="acc-body">
+              <div id="groupList"></div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <input id="newGroup" placeholder="Add group name" />
+                <button class="btn tiny" onclick="addGroup()">Add</button>
+              </div>
+            </div>
+          </div>
 
-<!-- GROUPS -->
-<div id="groups" class="section active card">
-    <h3>Groups</h3>
-    <div id="groupList"></div>
-    <input id="newGroup" placeholder="New group name" style="width:100%;padding:10px;margin-top:10px;border-radius:10px;border:1px solid #ccc;">
-    <button onclick="addGroup()">Add Group</button>
-</div>
+          <!-- People accordion -->
+          <div class="accordion">
+            <div class="acc-header" onclick="toggleAcc(this)">
+              <div><strong>People</strong></div>
+              <div class="small-muted">Add / Remove</div>
+            </div>
+            <div class="acc-body">
+              <div id="peopleList"></div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <input id="newPerson" placeholder="Person name" />
+                <button class="btn tiny" onclick="addPerson()">Add</button>
+              </div>
+            </div>
+          </div>
 
-<!-- PEOPLE -->
-<div id="people" class="section card">
-    <h3>People</h3>
-    <div id="peopleList"></div>
-    <input id="newPerson" placeholder="Person name" style="width:100%;padding:10px;margin-top:10px;border-radius:10px;border:1px solid #ccc;">
-    <button onclick="addPerson()">Add Person</button>
-</div>
+          <!-- Categories accordion -->
+          <div class="accordion">
+            <div class="acc-header" onclick="toggleAcc(this)">
+              <div><strong>Categories</strong></div>
+              <div class="small-muted">Add / Remove</div>
+            </div>
+            <div class="acc-body">
+              <div id="catList"></div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <input id="newCat" placeholder="Category name" />
+                <button class="btn tiny" onclick="addCategory()">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- CATEGORIES -->
-<div id="categories" class="section card">
-    <h3>Categories</h3>
-    <div id="categoryList"></div>
-    <input id="newCategory" placeholder="Category name" style="width:100%;padding:10px;margin-top:10px;border-radius:10px;border:1px solid #ccc;">
-    <button onclick="addCategory()">Add Category</button>
-</div>
+        <!-- ENTRIES -->
+        <div id="entries" class="card" style="margin-top:16px;display:none">
+          <h3>Entries</h3>
 
-<!-- ENTRIES -->
-<div id="entries" class="section card">
-    <h3>Add Entry</h3>
+          <label>Amount</label>
+          <input id="entryAmount" type="number" min="0" step="1" />
 
-    <label>Amount</label>
-    <input id="amount" type="number" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;">
+          <label style="margin-top:8px">Payer</label>
+          <select id="entryPayer"></select>
 
-    <label style="margin-top:10px;">Paid By</label>
-    <select id="paidBy" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;"></select>
+          <label style="margin-top:8px">Category</label>
+          <select id="entryCategory"></select>
 
-    <label style="margin-top:10px;">Category</label>
-    <select id="entryCategory" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;"></select>
+          <label style="margin-top:8px">Participants</label>
+          <div id="entryParticipants" style="display:flex;flex-direction:column;gap:8px"></div>
 
-    <h4 style="margin-top:12px;">Participants</h4>
-    <div id="participantList"></div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn" onclick="saveEntry()">Save</button>
+            <button class="btn ghost" onclick="clearEntry()">Clear</button>
+          </div>
 
-    <button onclick="addEntry()">Add Entry</button>
-</div>
+          <div style="margin-top:12px">
+            <div class="small-muted">Entries</div>
+            <div id="entriesList" class="expenses-list"></div>
+          </div>
+        </div>
 
-<!-- SUMMARY -->
-<div id="summary" class="section card">
-    <h3>Summary</h3>
-    <div id="summaryContent"></div>
+      </section>
 
-    <label style="margin-top:14px;">Transfer To</label>
-    <select id="transferTo" onchange="updateSummary()" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;"></select>
+      <!-- Right column: Summary -->
+      <aside>
+        <div id="summaryCard" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong>Summary</strong></div>
+            <div class="small-muted">Local only</div>
+          </div>
 
-    <div id="finalTransferText" style="margin-top:14px;font-weight:600;"></div>
+          <div id="summaryWrap" style="margin-top:12px">
+            <div class="small-muted">Category totals</div>
+            <div id="categoryTotals" style="margin-top:8px"></div>
 
-    <!-- ACTIONS ROW -->
-    <div class="footer-actions">
-        <button class="secondary" onclick="resetEntries()">Reset Entries</button>
-        <button onclick="copySummary()">Copy</button>
-        <button onclick="shareSummary()">Share</button>
+            <div style="height:8px"></div>
+
+            <div class="small-muted">Net balances</div>
+            <div id="personTotals" style="margin-top:8px"></div>
+
+            <div style="height:12px"></div>
+
+            <label>Transfer To</label>
+            <select id="collector" style="width:100%;padding:8px;border-radius:8px"></select>
+            <div id="transferInline" style="margin-top:12px"></div>
+
+            <div class="actions-line">
+              <button class="btn ghost" onclick="resetEntries()">Reset Entries</button>
+              <button class="btn" onclick="copySummary()">Copy</button>
+              <button class="btn" id="shareBtn" onclick="shareSummary()">Share</button>
+            </div>
+
+            <div style="height:8px"></div>
+
+            <div style="margin-top:8px" id="transferDetail"></div>
+          </div>
+        </div>
+      </aside>
     </div>
 
-</div>
+    <footer style="display:none">Spendsplit</footer>
+  </div>
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-/* Local storage state */
-let state = { groups: [], people: [], categories: ["Food","Entertainment","Fuel","Shopping"], entries: [], activeGroup: null };
+(function(){
+  const KEY = 'spendsplit_v_final';
+  const uid = ()=> Math.random().toString(36).slice(2,9);
 
-function save(){ localStorage.setItem("spendsplit", JSON.stringify(state)); }
-function load(){
-    const data = localStorage.getItem("spendsplit");
-    if (data) state = JSON.parse(data);
-}
-load();
+  // State: groups array of objects {id,name,people:[],categories:[],entries:[]}
+  let data = { groups: [] };
+  let currentGroupId = null;
 
-/* UI helpers */
-function switchTab(id){
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById(id).classList.add('active');
-    refreshUI();
-}
+  // DOM refs
+  const tabs = { base: document.getElementById('tab-base'), entries: document.getElementById('tab-entries'), summary: document.getElementById('tab-summary') };
+  const baseSection = document.getElementById('base');
+  const entriesSection = document.getElementById('entries');
+  const summaryCard = document.getElementById('summaryCard');
 
-function refreshUI(){
-    updateGroups();
-    updatePeople();
-    updateCategories();
-    updateParticipants();
-    updateSummary();
-}
+  // load/save
+  function load(){ const s = localStorage.getItem(KEY); if(s){ try{ data = JSON.parse(s); } catch(e){ data = {groups:[]}; } } }
+  function save(){ localStorage.setItem(KEY, JSON.stringify(data)); }
+  load();
 
-/* GROUPS */
-function addGroup(){
-    const name=document.getElementById("newGroup").value.trim();
-    if(!name) return;
-    state.groups.push(name);
-    state.activeGroup=name;
-    document.getElementById("newGroup").value="";
-    save(); refreshUI();
-}
+  if(!data.groups || !data.groups.length){
+    const gid = uid();
+    data.groups = [{ id:gid, name:'My Group', people:[], categories:['Food','Entertainment','Fuel','Shopping'], entries:[] }];
+    currentGroupId = gid; save();
+  } else {
+    currentGroupId = data.groups[0].id;
+  }
 
-function updateGroups(){
-    const div=document.getElementById("groupList");
-    div.innerHTML="";
-    state.groups.forEach(g=>{
-        const row=document.createElement("div");
-        row.className="list-item";
-        row.innerHTML=`${g}`;
-        row.onclick=()=>{ state.activeGroup=g; save(); refreshUI(); };
-        div.appendChild(row);
+  // Utility
+  function gcur(){ return data.groups.find(g=>g.id===currentGroupId); }
+
+  // Tabs
+  function showTab(name){
+    tabs.base.classList.remove('active'); tabs.entries.classList.remove('active'); tabs.summary.classList.remove('active');
+    document.getElementById('base').style.display = name==='base' ? '' : 'none';
+    document.getElementById('entries').style.display = name==='entries' ? '' : 'none';
+    // summary always visible on right; toggle tab styles
+    if(name === 'base') tabs.base.classList.add('active');
+    if(name === 'entries') tabs.entries.classList.add('active');
+    if(name === 'summary') tabs.summary.classList.add('active');
+    // if user clicked summary, highlight summary tab and keep left showing base
+    if(name === 'summary'){ tabs.summary.classList.add('active'); }
+    // render current UI
+    renderAll();
+  }
+  // initialize tab listeners
+  document.getElementById('tab-base').addEventListener('click', ()=> showTab('base'));
+  document.getElementById('tab-entries').addEventListener('click', ()=> showTab('entries'));
+  document.getElementById('tab-summary').addEventListener('click', ()=> showTab('summary'));
+
+  // Accordion toggle
+  window.toggleAcc = function(el){
+    const body = el.nextElementSibling;
+    body.classList.toggle('open');
+  };
+
+  // Groups UI
+  window.addGroup = function(){
+    const name = document.getElementById('newGroup').value.trim();
+    if(!name) return alert('Enter group name');
+    const g = { id: uid(), name, people:[], categories:['Food','Entertainment','Fuel','Shopping'], entries:[] };
+    data.groups.push(g); currentGroupId = g.id; save(); renderAll();
+    document.getElementById('newGroup').value='';
+  };
+
+  function renderGroups(){
+    const wrap = document.getElementById('groupList'); wrap.innerHTML='';
+    data.groups.forEach(g=>{
+      const row = document.createElement('div'); row.className='list-item';
+      row.innerHTML = `<div style="font-weight:700">${g.name}</div>
+                       <div style="display:flex;gap:8px">
+                         <button class="btn tiny" onclick="setActive('${g.id}')">Open</button>
+                         <button class="btn ghost tiny" onclick="deleteGroup('${g.id}')">Delete</button>
+                       </div>`;
+      wrap.appendChild(row);
     });
-}
+  }
+  window.setActive = function(id){ currentGroupId = id; save(); renderAll(); };
+  window.deleteGroup = function(id){
+    if(!confirm('Delete group?')) return;
+    data.groups = data.groups.filter(x=>x.id!==id);
+    if(data.groups.length===0){
+      const gid = uid(); data.groups.push({id:gid,name:'My Group',people:[],categories:['Food','Entertainment','Fuel','Shopping'],entries:[]});
+    }
+    currentGroupId = data.groups[0].id; save(); renderAll();
+  };
 
-/* PEOPLE */
-function addPerson(){
-    const name=document.getElementById("newPerson").value.trim();
-    if(!name) return;
-    state.people.push(name);
-    document.getElementById("newPerson").value="";
-    save(); refreshUI();
-}
+  // People
+  window.addPerson = function(){
+    const name = document.getElementById('newPerson').value.trim();
+    if(!name) return alert('Enter name');
+    const g = gcur(); g.people.push({ id: uid(), name }); save(); document.getElementById('newPerson').value=''; renderAll();
+  };
+  window.removePerson = function(pid){
+    const g = gcur(); const p = g.people.find(x=>x.id===pid);
+    if(!p) return;
+    if(!confirm('Remove '+p.name+'? This removes them from entries.')) return;
+    g.people = g.people.filter(x=>x.id!==pid);
+    g.entries = g.entries.map(e=> ({ ...e, participants: e.participants.filter(id=>id!==pid), payer: e.payer===pid? (g.people[0]?g.people[0].id:null): e.payer })).filter(e=>e.participants && e.participants.length>0);
+    save(); renderAll();
+  };
 
-function updatePeople(){
-    const list=document.getElementById("peopleList");
-    const paidBy=document.getElementById("paidBy");
-    const transfer=document.getElementById("transferTo");
+  // Categories
+  window.addCategory = function(){
+    const name = document.getElementById('newCat').value.trim();
+    if(!name) return alert('Enter category');
+    const g = gcur(); if(g.categories.includes(name)) return alert('Category exists');
+    g.categories.push(name); save(); document.getElementById('newCat').value=''; renderAll();
+  };
+  window.removeCategory = function(cat){
+    const g = gcur();
+    if(g.categories.length<=1) return alert('At least one category required');
+    if(!confirm('Remove category "'+cat+'"?')) return;
+    g.categories = g.categories.filter(c=>c!==cat);
+    save(); renderAll();
+  };
 
-    list.innerHTML="";
-    paidBy.innerHTML="";
-    transfer.innerHTML="<option value=''>Select</option>";
-
-    state.people.forEach(p=>{
-        let row=document.createElement("div");
-        row.className="list-item";
-        row.innerHTML=p;
-        list.appendChild(row);
-
-        paidBy.innerHTML += `<option>${p}</option>`;
-        transfer.innerHTML += `<option>${p}</option>`;
+  // Entries
+  function renderParticipantsForEntry(){
+    const container = document.getElementById('entryParticipants'); container.innerHTML='';
+    const g = gcur(); if(!g) return;
+    g.people.forEach(p=>{
+      const row = document.createElement('div'); row.className='participant-row';
+      row.innerHTML = `<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
+      // click toggles checkbox
+      row.addEventListener('click', (ev)=>{ if(ev.target.tagName === 'INPUT') return; const cb = row.querySelector('input[type=checkbox]'); cb.checked = !cb.checked; });
+      container.appendChild(row);
     });
-}
+  }
 
-/* CATEGORIES */
-function addCategory(){
-    const name=document.getElementById("newCategory").value.trim();
-    if(!name) return;
-    state.categories.push(name);
-    document.getElementById("newCategory").value="";
-    save(); refreshUI();
-}
+  window.saveEntry = function(){
+    const g = gcur(); if(!g) return;
+    const amt = Math.round(Number(document.getElementById('entryAmount').value || 0));
+    const payer = document.getElementById('entryPayer').value;
+    const category = document.getElementById('entryCategory').value;
+    const parts = Array.from(document.querySelectorAll('#entryParticipants input[type=checkbox]')).filter(cb=>cb.checked).map(cb=>cb.value);
+    if(!amt || !payer || parts.length===0) return alert('Fill amount, payer and participants');
+    const ex = { id: uid(), payer, amt, participants: parts, category, ts: Date.now() };
+    g.entries.push(ex); save(); clearEntry(); renderAll();
+  };
+  window.clearEntry = function(){ document.getElementById('entryAmount').value=''; document.querySelectorAll('#entryParticipants input[type=checkbox]').forEach(cb=>cb.checked=false); };
 
-function updateCategories(){
-    let list=document.getElementById("categoryList");
-    let entryCat=document.getElementById("entryCategory");
+  window.editEntry = function(eid){
+    const g = gcur(); const ex = g.entries.find(x=>x.id===eid); if(!ex) return;
+    const newAmt = prompt('Edit amount', ex.amt); if(newAmt===null) return;
+    ex.amt = Math.round(Number(newAmt)||ex.amt); save(); renderAll();
+  };
+  window.deleteEntry = function(eid){
+    if(!confirm('Delete entry?')) return;
+    const g = gcur(); g.entries = g.entries.filter(x=>x.id!==eid); save(); renderAll();
+  };
 
-    list.innerHTML="";
-    entryCat.innerHTML="";
-
-    state.categories.forEach(c=>{
-        let row=document.createElement("div");
-        row.className="list-item";
-        row.innerHTML=c;
-        list.appendChild(row);
-
-        entryCat.innerHTML += `<option>${c}</option>`;
+  // Summary calculations
+  function computeBalances(){
+    const g = gcur(); const bal = {}; if(!g) return bal;
+    g.people.forEach(p=> bal[p.id]=0);
+    g.entries.forEach(e=>{
+      const n = e.participants.length;
+      const base = Math.floor(e.amt / n);
+      let rem = e.amt - base*n;
+      e.participants.forEach(pid=>{
+        const share = base + (rem>0?1:0); if(rem>0) rem--;
+        bal[pid] = (bal[pid] || 0) - share;
+      });
+      bal[e.payer] = (bal[e.payer] || 0) + e.amt;
     });
-}
+    Object.keys(bal).forEach(k=> bal[k] = Math.round(bal[k]));
+    return bal;
+  }
+  function computeCategoryTotals(){
+    const g = gcur(); const ct = {}; if(!g) return ct;
+    g.categories.forEach(c=> ct[c]=0);
+    g.entries.forEach(e=> { ct[e.category] = (ct[e.category]||0) + e.amt; });
+    return ct;
+  }
 
-/* PARTICIPANTS */
-function updateParticipants(){
-    const div=document.getElementById("participantList");
-    div.innerHTML="";
+  // Transfer-to logic (Option A)
+  function computeTransferOps(collectorId){
+    const g = gcur(); const bal = computeBalances();
+    const creditors = [], debtors = [];
+    for(const pid in bal){ const v = bal[pid]; if(v>0) creditors.push({id:pid,amt:v}); else if(v<0) debtors.push({id:pid,amt:-v}); }
+    const ops = []; let totalToReceive = 0;
+    debtors.forEach(d=>{ if(d.id===collectorId) return; ops.push({from:d.id,to:collectorId,amt:d.amt}); totalToReceive += d.amt; });
+    const collectorInitial = bal[collectorId]||0;
+    const collectorAfter = collectorInitial + totalToReceive;
+    const otherCreds = creditors.filter(c=>c.id!==collectorId).map(c=>({...c}));
+    let rem = collectorAfter;
+    otherCreds.forEach(c=>{ if(rem<=0) return; const pay = Math.min(rem, c.amt); if(pay>0){ ops.push({from:collectorId,to:c.id,amt:pay}); rem -= pay; } });
+    return ops;
+  }
 
-    state.people.forEach(p=>{
-        let row=document.createElement("div");
-        row.className="list-item";
-        row.onclick=()=> toggleParticipant(p);
+  // Renderers
+  function renderAll(){
+    renderGroups(); renderPeople(); renderCategories();
+    renderParticipantsForEntry(); renderEntryLists(); renderSummary(); renderCollectorList();
+    save();
+  }
 
-        row.innerHTML = `
-            <input type="checkbox" id="chk-${p}" style="transform:scale(1.3);" />
-            <span>${p}</span>
-        `;
-
-        div.appendChild(row);
+  function renderGroups(){
+    const wrap = document.getElementById('groupList'); wrap.innerHTML='';
+    data.groups.forEach(g=>{
+      const div = document.createElement('div'); div.className='list-item';
+      div.innerHTML = `<div style="font-weight:700">${g.name}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn tiny" onclick="setActive('${g.id}')">Open</button>
+          <button class="btn ghost tiny" onclick="deleteGroup('${g.id}')">Delete</button>
+        </div>`;
+      wrap.appendChild(div);
     });
-}
+  }
 
-let tempParticipants = [];
-
-function toggleParticipant(name){
-    const idx=tempParticipants.indexOf(name);
-    if(idx>=0) tempParticipants.splice(idx,1);
-    else tempParticipants.push(name);
-
-    document.getElementById("chk-"+name).checked = tempParticipants.includes(name);
-}
-
-/* ADD ENTRY */
-function addEntry(){
-    const amt=parseInt(document.getElementById("amount").value);
-    const paidBy=document.getElementById("paidBy").value;
-    const cat=document.getElementById("entryCategory").value;
-
-    if(!amt || !paidBy || tempParticipants.length===0) return;
-
-    state.entries.push({
-        amount: amt,
-        paidBy,
-        participants:[...tempParticipants],
-        category:cat
+  function renderPeople(){
+    const wrap = document.getElementById('peopleList'); wrap.innerHTML='';
+    const g = gcur(); if(!g) return;
+    g.people.forEach(p=>{
+      const div = document.createElement('div'); div.className='list-item';
+      div.innerHTML = `<div>${p.name}</div><div style="display:flex;gap:8px">
+                        <button class="btn ghost tiny" onclick="removePerson('${p.id}')">Remove</button></div>`;
+      wrap.appendChild(div);
     });
+    // populate payer select in entries
+    const payerSel = document.getElementById('entryPayer'); payerSel.innerHTML='';
+    g.people.forEach(p=> payerSel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+  }
 
-    tempParticipants=[];
-    save(); refreshUI();
-}
-
-/* SUMMARY */
-function updateSummary(){
-    const div=document.getElementById("summaryContent");
-    div.innerHTML="";
-
-    let totals={}, categoryTotals={};
-
-    state.people.forEach(p=>totals[p]=0);
-
-    state.entries.forEach(e=>{
-        e.participants.forEach(p=>{
-            totals[p] -= Math.round(e.amount/e.participants.length);
-        });
-        totals[e.paidBy] += e.amount;
-
-        categoryTotals[e.category]=(categoryTotals[e.category]||0)+e.amount;
+  function renderCategories(){
+    const wrap = document.getElementById('catList'); wrap.innerHTML='';
+    const g = gcur(); if(!g) return;
+    g.categories.forEach(c=>{
+      const div = document.createElement('div'); div.className='list-item';
+      div.innerHTML = `<div>${c}</div><div><button class="btn ghost tiny" onclick="removeCategory('${c}')">Remove</button></div>`;
+      wrap.appendChild(div);
     });
+    const catSel = document.getElementById('entryCategory'); catSel.innerHTML='';
+    g.categories.forEach(c=> catSel.innerHTML += `<option value="${c}">${c}</option>`);
+  }
 
-    /* Show category totals */
-    Object.keys(categoryTotals).forEach(cat=>{
-        div.innerHTML += `<b>${cat}:</b> ₹${categoryTotals[cat]}<br>`;
+  function renderEntryLists(){
+    const g = gcur();
+    const list = document.getElementById('entriesList'); list.innerHTML='';
+    if(!g) return;
+    g.entries.slice().reverse().forEach(e=>{
+      const row = document.createElement('div'); row.className='expense-item';
+      const payerName = (g.people.find(p=>p.id===e.payer)||{}).name || 'Unknown';
+      const parts = e.participants.map(id=> (g.people.find(p=>p.id===id)||{}).name || '?').join(', ');
+      row.innerHTML = `<div>
+        <div style="font-weight:700">${e.category} • ₹${e.amt}</div>
+        <div class="small-muted">${payerName} paid — ${parts}</div>
+        <div class="small-muted">${new Date(e.ts||Date.now()).toLocaleString()}</div>
+      </div>`;
+      const actions = document.createElement('div'); actions.style.display='flex'; actions.style.flexDirection='column'; actions.style.gap='8px';
+      const edit = document.createElement('button'); edit.className='tiny btn ghost'; edit.textContent='Edit'; edit.onclick = ()=> editEntry(e.id);
+      const del = document.createElement('button'); del.className='tiny btn ghost'; del.textContent='Delete'; del.onclick = ()=> deleteEntry(e.id);
+      actions.appendChild(edit); actions.appendChild(del); row.appendChild(actions);
+      list.appendChild(row);
     });
+    document.getElementById('expCount') && (document.getElementById('expCount').textContent = g.entries.length + ' items');
+  }
 
-    div.innerHTML += `<hr>`;
-
-    /* Show totals */
-    Object.keys(totals).forEach(p=>{
-        div.innerHTML += `${p}: <b>${totals[p]}</b><br>`;
+  function renderSummary(){
+    const g = gcur(); if(!g) return;
+    const ct = computeCategoryTotals();
+    const categoryTotalsDiv = document.getElementById('categoryTotals'); categoryTotalsDiv.innerHTML='';
+    Object.keys(ct).forEach(c=>{
+      const r = document.createElement('div'); r.className='summary-row'; r.innerHTML = `<div>${c}</div><div class="muted">₹${ct[c]||0}</div>`; categoryTotalsDiv.appendChild(r);
     });
-
-    /* Transfer logic */
-    const t=document.getElementById("transferTo").value;
-    if(!t) return;
-
-    let receivers=[];
-    let payerTotal = totals[t];
-
-    Object.keys(totals).forEach(p=>{
-        if(p!==t && totals[p]<0){
-            receivers.push({ person:p, amt: Math.abs(totals[p]) });
-        }
+    const bal = computeBalances();
+    const personTotalsDiv = document.getElementById('personTotals'); personTotalsDiv.innerHTML='';
+    g.people.map(p=>({id:p.id,name:p.name,amt:bal[p.id]||0})).sort((a,b)=>b.amt-a.amt).forEach(it=>{
+      const r = document.createElement('div'); r.className='summary-row';
+      r.innerHTML = `<div><strong>${it.name}</strong><div class="small-muted">Net</div></div><div class="${it.amt>=0?'positive':'negative'}">₹${Math.abs(it.amt)}</div>`;
+      personTotalsDiv.appendChild(r);
     });
+    // inline transfer text (update when collector selected)
+    updateTransferInline();
+  }
 
-    receivers.sort((a,b)=>b.amt - a.amt);
+  function renderCollectorList(){
+    const sel = document.getElementById('collector'); sel.innerHTML='';
+    const g = gcur(); if(!g) return;
+    g.people.forEach(p=> sel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+  }
 
-    let text = `Everyone pays to ${t}.<br>`;
-    let left = payerTotal;
+  function updateTransferInline(){
+    const g = gcur(); const collectorId = document.getElementById('collector').value; const inline = document.getElementById('transferInline'); inline.innerHTML='';
+    if(!g || !collectorId){ inline.innerHTML = '<div class="small-muted">Select collector and click compute below</div>'; return; }
+    const ops = computeTransferOps(collectorId);
+    if(!ops.length){ inline.innerHTML = '<div class="small-muted">Nothing to transfer — settled</div>'; return; }
+    // aggregate and sentences
+    const agg = {};
+    ops.forEach(o=>{ const k=o.from+'|'+o.to; agg[k] = (agg[k]||0)+o.amt; });
+    const map = {}; g.people.forEach(p=> map[p.id]=p.name);
+    // show rows
+    Object.keys(agg).forEach(k=>{ const [from,to]=k.split('|'); const amt = agg[k]; const row = document.createElement('div'); row.className='summary-row'; row.innerHTML=`<div>${map[from]||'?'} → ${map[to]||'?'}</div><div class="muted">₹${amt}</div>`; inline.appendChild(row); });
+    // sentences: Everyone pays collector, collector forwards
+    const totalsByReceiver = {};
+    Object.keys(agg).forEach(k=>{ const to = k.split('|')[1]; totalsByReceiver[to] = (totalsByReceiver[to]||0) + agg[k]; });
+    let collector = null, maxv=0; Object.keys(totalsByReceiver).forEach(r=>{ if(totalsByReceiver[r]>maxv){ maxv=totalsByReceiver[r]; collector=r; } });
+    const sentences = [];
+    if(collector) sentences.push(`Everyone pays ${map[collector]}.`);
+    Object.keys(agg).forEach(k=>{ const [from,to]=k.split('|'); const amt=agg[k]; if(from===collector && to!==collector) sentences.push(`${map[collector]} transfers ₹${amt} to ${map[to]}.`); });
+    if(sentences.length){ const sb=document.createElement('div'); sb.style.marginTop='8px'; sentences.forEach(s=>{ const p=document.createElement('div'); p.textContent=s; sb.appendChild(p); }); inline.appendChild(sb); }
+  }
 
-    receivers.forEach(r=>{
-        if(left<=0) return;
-        let pay = Math.min(left, r.amt);
-        if(pay>0){
-            text += `${t} pays ₹${pay} to ${r.person}.<br>`;
-            left -= pay;
-        }
-    });
+  // compute transfer detail on right panel (detailed rows)
+  function renderTransferDetail(ops){
+    const g = gcur(); const map={}; g.people.forEach(p=>map[p.id]=p.name);
+    const detail = document.getElementById('transferDetail'); detail.innerHTML='';
+    if(!ops.length) { detail.innerHTML = '<div class="small-muted">No transfers</div>'; return; }
+    const agg = {}; ops.forEach(o=>{ const k=o.from+'|'+o.to; agg[k] = (agg[k]||0) + o.amt; });
+    Object.keys(agg).forEach(k=>{ const [from,to]=k.split('|'); const amt=agg[k]; const r = document.createElement('div'); r.className='summary-row'; r.innerHTML = `<div>${map[from]||'?'} → ${map[to]||'?'}</div><div class="muted">₹${amt}</div>`; detail.appendChild(r); });
+  }
 
-    document.getElementById("finalTransferText").innerHTML=text;
-}
+  // actions used by UI
+  window.setActive = function(id){ currentGroupId = id; renderAll(); save(); };
+  window.deleteGroup = function(id){ if(!confirm('Delete group?')) return; data.groups = data.groups.filter(g=>g.id!==id); if(data.groups.length===0){ const gid=uid(); data.groups.push({id:gid,name:'My Group',people:[],categories:['Food','Entertainment','Fuel','Shopping'],entries:[]}); } currentGroupId = data.groups[0].id; save(); renderAll(); };
 
-/* RESET ENTRIES */
-function resetEntries(){
-    state.entries=[];
-    save(); refreshUI();
-}
+  window.removePerson = removePerson;
+  function removePerson(pid){ const g = gcur(); const p = g.people.find(x=>x.id===pid); if(!p) return; if(!confirm('Remove '+p.name+'?')) return; g.people = g.people.filter(x=>x.id!==pid); g.entries = g.entries.map(e=>({...e,participants:e.participants.filter(id=>id!==pid),payer:e.payer===pid? (g.people[0]?g.people[0].id:null):e.payer })).filter(e=>e.participants && e.participants.length>0); save(); renderAll(); }
 
-/* COPY SUMMARY */
-function copySummary(){
-    const text=document.getElementById("summary").innerText;
-    navigator.clipboard.writeText(text);
-}
+  window.removeCategory = removeCategory;
+  function removeCategory(cat){ const g = gcur(); if(g.categories.length<=1) return alert('At least one category required'); if(!confirm('Remove '+cat+'?')) return; g.categories = g.categories.filter(c=>c!==cat); save(); renderAll(); }
 
-/* SHARE SUMMARY (text only for now) */
-function shareSummary(){
-    const text=document.getElementById("summary").innerText;
-    navigator.share({ text });
-}
+  // entry editing/wrappers for buttons
+  window.editEntry = function(id){ const g=gcur(); const e = g.entries.find(x=>x.id===id); if(!e) return; const na = prompt('New amount', e.amt); if(na===null) return; e.amt = Math.round(Number(na)||e.amt); save(); renderAll(); };
+  window.deleteEntry = function(id){ if(!confirm('Delete entry?')) return; const g=gcur(); g.entries = g.entries.filter(x=>x.id!==id); save(); renderAll(); };
 
-/* Initialize UI */
-refreshUI();
+  // compute transfer ops and update UI when compute button clicked
+  document.getElementById('shareBtn').addEventListener('click', shareSummary);
+
+  // compute transfer when user selects collector and clicks compute - we will add compute action to selection change
+  document.getElementById('collector').addEventListener('change', ()=> updateTransferInline());
+
+  // compute detailed transfer on demand (we show both inline and detail when user clicks compute)
+  function computeAndShow(){
+    const coll = document.getElementById('collector').value; if(!coll) return alert('Select collector');
+    const ops = computeTransferOps(coll);
+    renderTransferDetail(ops);
+    updateTransferInline(); // inline sentences
+  }
+  // Add a compute button area
+  (function addComputeBtn(){
+    const node = document.createElement('div'); node.style.marginTop='10px';
+    const b = document.createElement('button'); b.className='btn tiny'; b.textContent='Compute Transfers'; b.onclick=computeAndShow;
+    node.appendChild(b); document.getElementById('collector').parentNode.appendChild(node);
+  })();
+
+  // Share summary (PNG of summaryWrap)
+  window.shareSummary = async function(){
+    const wrap = document.getElementById('summaryWrap');
+    if(!wrap) return;
+    const old = wrap.style.background; wrap.style.background = '#ffffff';
+    try{
+      const canvas = await html2canvas(wrap, {backgroundColor:null, scale: window.devicePixelRatio||2});
+      const blob = await new Promise(r=>canvas.toBlob(r,'image/png'));
+      const file = new File([blob],'spendsplit-summary.png',{type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({ files:[file], title:'Spendsplit Summary' }).catch(()=>{});
+      } else {
+        const url = URL.createObjectURL(blob); window.open(url,'_blank');
+      }
+    }catch(e){ console.error(e); alert('Could not create image'); }
+    finally{ wrap.style.background = old; }
+  };
+
+  window.copySummary = function(){
+    const wrap = document.getElementById('summaryWrap'); navigator.clipboard.writeText(wrap.innerText).then(()=> alert('Summary copied'));
+  };
+
+  window.resetEntries = function(){
+    const g = gcur(); if(!confirm('Clear all entries for this group?')) return; g.entries = []; save(); renderAll();
+  };
+
+  // initial render helpers
+  function renderAll(){
+    renderGroups(); renderPeople(); renderCategories(); renderParticipantsForEntry(); renderEntryLists(); renderSummary(); renderCollectorList();
+  }
+  renderAll();
+
+  // save on exit
+  window.addEventListener('beforeunload', ()=> save());
+
+})();
 </script>
-
 </body>
 </html>
