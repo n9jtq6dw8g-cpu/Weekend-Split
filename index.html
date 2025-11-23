@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Weekend Split — Minimal</title>
+
 <style>
   :root{
     --bg:#f6f7f9;
@@ -31,9 +32,9 @@
   input[type="text"], input[type="number"], select{width:100%;padding:10px;border-radius:10px;border:1px solid #e6e9ee;background:#fff;font-size:14px;outline:none}
   .row{display:flex;gap:8px}
   .people-list{display:flex;flex-wrap:wrap;gap:8px}
-  .person-chip{padding:6px 10px;background:var(--plate);border-radius:12px;font-weight:600;font-size:13px;border:1px solid rgba(15,23,36,0.03);cursor:pointer}
-  .participant-checkbox{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;border:1px solid rgba(15,23,36,0.03);background:#fff;cursor:pointer}
-  .participant-checkbox input{margin:0}
+  .person-chip{padding:6px 10px;background:var(--plate);border-radius:12px;font-weight:600;font-size:13px;border:1px solid rgba(15,23,36,0.03);cursor:pointer;user-select:none;}
+  .participant-checkbox{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;border:1px solid rgba(15,23,36,0.03);background:#fff;cursor:pointer;}
+  .participant-checkbox input{margin:0;}
   .expense{display:flex;justify-content:space-between;gap:8px;padding:10px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid rgba(15,23,36,0.03);margin-bottom:8px}
   .muted{color:var(--muted);font-size:13px}
   .tiny{padding:6px 8px;border-radius:8px;font-size:13px}
@@ -41,6 +42,9 @@
   .summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:var(--plate);margin-bottom:8px;border:1px solid rgba(15,23,36,0.03)}
   .positive{color:var(--success);font-weight:700}
   .negative{color:var(--danger);font-weight:700}
+  .note{font-size:13px;color:var(--muted);margin-top:8px}
+  .list-scroll{max-height:320px;overflow:auto;padding-right:6px}
+  .select-inline{display:flex;gap:8px;align-items:center}
   .badge{padding:6px 10px;border-radius:999px;background:#fff;border:1px solid rgba(15,23,36,0.04);font-weight:600}
   .center{display:flex;align-items:center;justify-content:center}
   .share-icon{font-size:18px;padding:8px;border-radius:8px;border:1px solid rgba(15,23,36,0.03);background:#fff;cursor:pointer}
@@ -102,6 +106,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:700">Add / Edit Expense</div>
         </div>
+
         <div style="margin-top:10px">
           <label>Payer</label>
           <select id="payerSelect"></select>
@@ -144,8 +149,8 @@
 
         <div id="summaryWrap" style="margin-top:12px">
           <div id="categoryTotals" style="margin-top:8px"></div>
+          <div style="height:8px"></div>
           <div id="summary" style="margin-top:8px"></div>
-
           <div style="height:12px"></div>
           <div id="transferResultInline" style="margin-top:8px"></div>
 
@@ -153,27 +158,20 @@
             <button id="resetEntriesBtn" class="btn ghost tiny" style="flex:1">Reset Entries</button>
             <button id="copySummary" class="btn tiny" style="flex:1">Copy Summary Text</button>
           </div>
-
-          <div style="height:10px"></div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-            <div style="font-weight:700">Transfer To</div>
-          </div>
-
-          <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
-            <select id="transferTo" style="flex:1"></select>
-            <button id="computeTransfer" class="btn tiny">Compute</button>
-          </div>
-
-          <div id="transferResult" style="margin-top:12px"></div>
         </div>
-      </div>
 
-      <!-- Actions -->
-      <div class="card" style="margin-top:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-weight:700">Info</div>
+        <div style="height:10px"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <div style="font-weight:700">Transfer To</div>
         </div>
+
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+          <select id="transferTo" style="flex:1"></select>
+          <button id="computeTransfer" class="btn tiny">Compute</button>
+        </div>
+
+        <div id="transferResult" style="margin-top:12px"></div>
       </div>
     </div>
   </div>
@@ -203,25 +201,50 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
 <script>
 (function(){
-  const STORAGE_KEY='ws_final_v3';
+  const STORAGE_KEY='ws_final_v5';
   const uid=()=>Math.random().toString(36).slice(2,9);
 
-  const groupSelect=el('groupSelect'),newGroupBtn=el('newGroupBtn'),delGroupBtn=el('delGroupBtn'),
-        addPersonBtn=el('addPerson'),personName=el('personName'),peopleList=el('peopleList'),
-        payerSelect=el('payerSelect'),amountInput=el('amountInput'),categorySelect=el('categorySelect'),
-        participantsDiv=el('participants'),saveExpense=el('saveExpense'),clearExpense=el('clearExpense'),
-        expensesList=el('expensesList'),expCount=el('expCount'),summaryDiv=el('summary'),
-        categoryTotalsDiv=el('categoryTotals'),transferTo=el('transferTo'),computeTransfer=el('computeTransfer'),
-        transferResult=el('transferResult'),shareBtn=el('shareBtn'),catName=el('catName'),
-        addCat=el('addCat'),catList=el('catList'),copySummary=el('copySummary'),resetEntriesBtn=el('resetEntriesBtn'),
-        transferResultInline=el('transferResultInline'),modal=el('modal'),closeModal=el('closeModal'),
-        editPayer=el('editPayer'),editAmount=el('editAmount'),editCategory=el('editCategory'),
-        editParticipants=el('editParticipants'),applyEdit=el('applyEdit'),deleteExpenseBtn=el('deleteExpense');
+  const groupSelect=el('groupSelect');
+  const newGroupBtn=el('newGroupBtn');
+  const delGroupBtn=el('delGroupBtn');
+  const addPersonBtn=el('addPerson');
+  const personName=el('personName');
+  const peopleList=el('peopleList');
+  const payerSelect=el('payerSelect');
+  const amountInput=el('amountInput');
+  const categorySelect=el('categorySelect');
+  const participantsDiv=el('participants');
+  const saveExpense=el('saveExpense');
+  const clearExpense=el('clearExpense');
+  const expensesList=el('expensesList');
+  const expCount=el('expCount');
+  const summaryDiv=el('summary');
+  const categoryTotalsDiv=el('categoryTotals');
+  const transferTo=el('transferTo');
+  const computeTransfer=el('computeTransfer');
+  const transferResult=el('transferResult');
+  const shareBtn=el('shareBtn');
+  const catName=el('catName');
+  const addCat=el('addCat');
+  const catList=el('catList');
+  const copySummary=el('copySummary');
+  const resetEntriesBtn=el('resetEntriesBtn');
+  const transferResultInline=el('transferResultInline');
 
-  let data={groups:[]},currentGroupId=null,editingId=null;
+  const modal=el('modal');
+  const closeModal=el('closeModal');
+  const editPayer=el('editPayer');
+  const editAmount=el('editAmount');
+  const editCategory=el('editCategory');
+  const editParticipants=el('editParticipants');
+  const applyEdit=el('applyEdit');
+  const deleteExpenseBtn=el('deleteExpense');
+
+  let data={groups:[]};
+  let currentGroupId=null;
+  let editingId=null;
 
   function el(id){return document.getElementById(id);}
   function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
@@ -232,110 +255,177 @@
   if(!data.groups.length){const gid=uid();data.groups=[{id:gid,name:'My Group',people:[],categories:['Food','Entertainment','Fuel','Shopping'],expenses:[]}];currentGroupId=gid;save();}
   else currentGroupId=data.groups[0].id;
 
-  function renderAll(){renderGroups(); renderPeople(); renderCategories(); renderExpenses(); renderSummary(); renderTransferSelect();}
-  
-  function renderGroups(){groupSelect.innerHTML='';data.groups.forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.name;if(g.id===currentGroupId)o.selected=true;groupSelect.appendChild(o);});}
-  
+  function renderAll(){
+    renderGroups(); renderPeople(); renderCategories(); renderExpenseForm(); renderExpenses(); renderSummary(); renderTransferSelect();
+  }
+
+  function renderGroups(){
+    groupSelect.innerHTML='';
+    data.groups.forEach(g=>{
+      const o=document.createElement('option'); o.value=g.id; o.textContent=g.name;
+      if(g.id===currentGroupId) o.selected=true;
+      groupSelect.appendChild(o);
+    });
+  }
+
   function renderPeople(){
-    const g=currentGroup();peopleList.innerHTML='';payerSelect.innerHTML='';participantsDiv.innerHTML='';
-    if(!g)return;if(!g.people.length)peopleList.innerHTML='<div class="small-muted">No people yet</div>';
+    const g=currentGroup(); peopleList.innerHTML=''; payerSelect.innerHTML=''; participantsDiv.innerHTML=''; editPayer.innerHTML=''; editParticipants.innerHTML='';
+    if(!g) return;
+    if(!g.people.length){peopleList.innerHTML='<div class="muted">No people yet</div>';}
     g.people.forEach(p=>{
-      const chip=document.createElement('div');chip.className='person-chip';chip.textContent=p.name;chip.dataset.pid=p.id;chip.title='Tap to remove';
-      chip.addEventListener('click',()=>{const cb=document.querySelector(`#participants input[value="${p.id}"]`);if(cb)cb.checked=!cb.checked;});
+      const chip=document.createElement('div'); chip.className='person-chip'; chip.textContent=p.name; chip.dataset.pid=p.id;
+      chip.addEventListener('click',()=>{const cb=participantsDiv.querySelector('input[value="'+p.id+'"]'); if(cb) cb.checked=!cb.checked;});
       peopleList.appendChild(chip);
-      const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name;payerSelect.appendChild(opt);
-      const lab=document.createElement('div');lab.className='participant-checkbox';lab.innerHTML=`<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
-      lab.addEventListener('click',()=>{const cb=lab.querySelector('input');cb.checked=!cb.checked;});
+
+      const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name; payerSelect.appendChild(opt);
+
+      const lab=document.createElement('div'); lab.className='participant-checkbox'; lab.innerHTML=`<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
+      lab.addEventListener('click',()=>{const cb=lab.querySelector('input'); cb.checked=!cb.checked;});
       participantsDiv.appendChild(lab);
     });
   }
 
-  function renderCategories(){const g=currentGroup();catList.innerHTML='';categorySelect.innerHTML='';if(!g)return;g.categories.forEach(c=>{const chip=document.createElement('div');chip.className='category-chip';chip.textContent=c;chip.dataset.cat=c;chip.title='Tap to remove';catList.appendChild(chip);const opt=document.createElement('option');opt.value=c;opt.textContent=c;categorySelect.appendChild(opt);});}
+  function renderCategories(){
+    const g=currentGroup(); catList.innerHTML=''; categorySelect.innerHTML=''; editCategory.innerHTML='';
+    if(!g) return;
+    g.categories.forEach(c=>{
+      const chip=document.createElement('div'); chip.className='category-chip'; chip.textContent=c; chip.dataset.cat=c;
+      chip.addEventListener('click',()=>{if(g.categories.length<=1)return; g.categories=g.categories.filter(x=>x!==c); save(); renderAll();});
+      catList.appendChild(chip);
+
+      const opt=document.createElement('option'); opt.value=c; opt.textContent=c; categorySelect.appendChild(opt);
+      const opt2=opt.cloneNode(true); editCategory.appendChild(opt2);
+    });
+  }
+
+  function renderExpenseForm(){amountInput.value=''; participantsDiv.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);}
 
   function renderExpenses(){
-    const g=currentGroup();expensesList.innerHTML='';if(!g)return;expCount.textContent=g.expenses.length+' items';
-    if(!g.expenses.length){expensesList.innerHTML='<div class="small-muted">No expenses</div>';return;}
+    const g=currentGroup(); expensesList.innerHTML=''; if(!g)return;
+    expCount.textContent=g.expenses.length+' items';
+    if(!g.expenses.length){expensesList.innerHTML='<div class="muted">No expenses</div>'; return;}
     g.expenses.slice().reverse().forEach(ex=>{
-      const payerName=g.people.find(p=>p.id===ex.payer)?.name||'Unknown';
+      const payerName=g.people.find(p=>p.id===ex.payer)?.name||'?';
       const partNames=ex.participants.map(pid=>g.people.find(p=>p.id===pid)?.name||'?').join(', ');
-      const div=document.createElement('div');div.className='expense';
-      const left=document.createElement('div');
-      left.innerHTML=`<div style="font-weight:700">${ex.category} • ₹${ex.amt}</div><div class="muted">${payerName} paid • split among ${partNames}</div>`;
-      const right=document.createElement('div');right.style.display='flex';right.style.flexDirection='column';right.style.gap='8px';
-      const editB=document.createElement('button');editB.className='tiny icon-btn';editB.title='Edit';editB.innerHTML='✎';editB.addEventListener('click',()=>openEdit(ex.id));
-      const delB=document.createElement('button');delB.className='tiny icon-btn';delB.title='Delete';delB.innerHTML='🗑';delB.addEventListener('click',()=>{if(confirm('Delete this expense?')){const g=currentGroup();g.expenses=g.expenses.filter(x=>x.id!==ex.id);save();renderAll();}});
-      right.appendChild(editB);right.appendChild(delB);
-      div.appendChild(left);div.appendChild(right);expensesList.appendChild(div);
+      const div=document.createElement('div'); div.className='expense';
+      const left=document.createElement('div'); left.textContent=`${payerName} paid ${ex.amount} for ${ex.category}`; 
+      const right=document.createElement('div'); 
+      const btn=document.createElement('button'); btn.textContent='✎'; btn.className='icon-btn'; 
+      btn.addEventListener('click',()=>{editingId=ex.id; openModal(ex);});
+      right.appendChild(btn); div.appendChild(left); div.appendChild(right); expensesList.appendChild(div);
     });
   }
 
   function renderSummary(){
-    const g=currentGroup();if(!g)return;summaryDiv.innerHTML='';categoryTotalsDiv.innerHTML='';
-    if(!g.expenses.length){summaryDiv.innerHTML='<div class="small-muted">No data</div>';return;}
-    let totals={},catTotals={};
-    g.people.forEach(p=>totals[p.id]=0);g.categories.forEach(c=>catTotals[c]=0);
-    g.expenses.forEach(ex=>{
-      const per=ex.amt/ex.participants.length;
-      ex.participants.forEach(pid=>totals[pid]-=per);
-      totals[ex.payer]+=ex.amt;
-      catTotals[ex.category]+=ex.amt;
-    });
-    let sumHtml='';
-    g.people.forEach(p=>{const v=Math.round(totals[p.id]*100)/100;sumHtml+=`<div class="summary-row">${p.name}: <span class="${v>=0?'positive':'negative'}">₹${v}</span></div>`;});
-    summaryDiv.innerHTML=sumHtml;
-    let catHtml='';for(const c in catTotals){catHtml+=`<div class="summary-row">${c}: ₹${catTotals[c]}</div>`;}categoryTotalsDiv.innerHTML=catHtml;
+    const g=currentGroup(); summaryDiv.innerHTML=''; categoryTotalsDiv.innerHTML=''; transferResultInline.innerHTML=''; if(!g)return;
+    const totals={}; g.categories.forEach(c=>totals[c]=0); g.expenses.forEach(ex=>totals[ex.category]+=ex.amount);
+    Object.keys(totals).forEach(c=>{const div=document.createElement('div'); div.className='summary-row'; div.textContent=`${c}: ${totals[c]}`; categoryTotalsDiv.appendChild(div);});
+    // Person-wise balance
+    const bal={}; g.people.forEach(p=>bal[p.id]=0);
+    g.expenses.forEach(ex=>{const share=ex.amount/ex.participants.length; ex.participants.forEach(pid=>{if(pid!==ex.payer) bal[pid]-=share; bal[ex.payer]+=share;});});
+    const sumDiv=document.createElement('div');
+    Object.keys(bal).forEach(pid=>{const p=g.people.find(p=>p.id===pid); if(!p) return; const v=bal[pid]; const span=document.createElement('div'); span.className=v>=0?'positive':'negative'; span.textContent=`${p.name}: ${Math.round(v)}`; sumDiv.appendChild(span);});
+    summaryDiv.appendChild(sumDiv);
   }
 
-  function renderTransferSelect(){const g=currentGroup();transferTo.innerHTML='';if(!g)return;g.people.forEach(p=>{const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name;transferTo.appendChild(opt);});}
+  function renderTransferSelect(){
+    const g=currentGroup(); transferTo.innerHTML=''; if(!g)return;
+    g.people.forEach(p=>{const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name; transferTo.appendChild(opt);});
+  }
 
-  newGroupBtn.addEventListener('click',()=>{const n=prompt('Group name');if(!n)return;const gid=uid();data.groups.push({id:gid,name:n,people:[],categories:[],expenses:[]});currentGroupId=gid;save();renderAll();});
-  delGroupBtn.addEventListener('click',()=>{if(!confirm('Delete this group?'))return;data.groups=data.groups.filter(g=>g.id!==currentGroupId);currentGroupId=data.groups[0]?.id||null;save();renderAll();});
-  groupSelect.addEventListener('change',()=>{currentGroupId=groupSelect.value;renderAll();});
+  function computeTransfers(){
+    const g=currentGroup(); if(!g)return;
+    const toPid=transferTo.value; if(!toPid) return;
+    const bal={}; g.people.forEach(p=>bal[p.id]=0);
+    g.expenses.forEach(ex=>{const share=ex.amount/ex.participants.length; ex.participants.forEach(pid=>{if(pid!==ex.payer) bal[pid]-=share; bal[ex.payer]+=share;});});
+    const positive=[]; const negative=[]; Object.keys(bal).forEach(pid=>{if(pid===toPid) return; const v=bal[pid]; if(v>0) positive.push({pid,v}); else if(v<0) negative.push({pid,v});});
+    let html=`<div>All pay to ${g.people.find(p=>p.id===toPid)?.name}</div>`;
+    positive.forEach(p=>{html+=`<div>${g.people.find(x=>x.id===toPid)?.name} pays ${Math.round(p.v)} to ${g.people.find(x=>x.id===p.pid)?.name}</div>`;});
+    transferResult.innerHTML=html;
 
-  addPersonBtn.addEventListener('click',()=>{const g=currentGroup();if(!g)return;const n=personName.value.trim();if(!n)return;g.people.push({id:uid(),name:n});personName.value='';save();renderAll();});
-  addCat.addEventListener('click',()=>{const g=currentGroup();if(!g)return;const n=catName.value.trim();if(!n)return;g.categories.push(n);catName.value='';save();renderAll();});
+    // inline summary
+    transferResultInline.innerHTML='';
+    const inlineHTML=document.createElement('div');
+    Object.keys(bal).forEach(pid=>{const p=g.people.find(p=>p.id===pid); if(!p) return; const v=bal[pid]; const div=document.createElement('div'); div.className=v>=0?'positive':'negative'; div.textContent=`${p.name}: ${Math.round(v)}`; inlineHTML.appendChild(div);});
+    transferResultInline.appendChild(inlineHTML);
+  }
+
+  function openModal(ex){
+    modal.style.display='flex';
+    const g=currentGroup();
+    editPayer.innerHTML=''; g.people.forEach(p=>{const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; if(p.id===ex.payer) o.selected=true; editPayer.appendChild(o);});
+    editAmount.value=ex.amount;
+    editCategory.innerHTML=''; g.categories.forEach(c=>{const o=document.createElement('option'); o.value=c; o.textContent=c; if(c===ex.category) o.selected=true; editCategory.appendChild(o);});
+    editParticipants.innerHTML='';
+    g.people.forEach(p=>{const lab=document.createElement('div'); lab.className='participant-checkbox'; lab.innerHTML=`<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`; if(ex.participants.includes(p.id)) lab.querySelector('input').checked=true; lab.addEventListener('click',()=>{const cb=lab.querySelector('input'); cb.checked=!cb.checked;}); editParticipants.appendChild(lab);});
+  }
+
+  function closeModalFunc(){modal.style.display='none'; editingId=null;}
+
+  newGroupBtn.addEventListener('click',()=>{
+    const name=prompt('Group name?'); if(!name) return;
+    const gid=uid(); data.groups.push({id:gid,name:name,people:[],categories:['Food','Entertainment','Fuel','Shopping'],expenses:[]}); currentGroupId=gid; save(); renderAll();
+  });
+
+  delGroupBtn.addEventListener('click',()=>{
+    if(!confirm('Delete group?')) return;
+    data.groups=data.groups.filter(g=>g.id!==currentGroupId);
+    currentGroupId=data.groups[0]?.id||null; save(); renderAll();
+  });
+
+  groupSelect.addEventListener('change',()=>{currentGroupId=groupSelect.value; renderAll();});
+
+  addPersonBtn.addEventListener('click',()=>{
+    const g=currentGroup(); if(!g) return; const n=personName.value.trim(); if(!n) return;
+    g.people.push({id:uid(),name:n}); personName.value=''; save(); renderAll();
+  });
+
+  addCat.addEventListener('click',()=>{
+    const g=currentGroup(); if(!g) return; const n=catName.value.trim(); if(!n) return; if(g.categories.includes(n)) return;
+    g.categories.push(n); catName.value=''; save(); renderAll();
+  });
 
   saveExpense.addEventListener('click',()=>{
-    const g=currentGroup();if(!g)return;const payer=payerSelect.value,amt=parseFloat(amountInput.value),cat=categorySelect.value;
-    if(!payer||isNaN(amt)||amt<=0||!cat)return;
-    const participants=[...participantsDiv.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value);
-    if(!participants.length)return;
-    g.expenses.push({id:uid(),payer,amt,category:cat,participants});amountInput.value='';participantsDiv.querySelectorAll('input').forEach(cb=>cb.checked=false);save();renderAll();
+    const g=currentGroup(); if(!g) return;
+    const payer=payerSelect.value; const amount=Number(amountInput.value); if(!payer||!amount) return;
+    const participants=[...participantsDiv.querySelectorAll('input:checked')].map(x=>x.value); if(!participants.length) return;
+    g.expenses.push({id:uid(),payer,amount,category:categorySelect.value,participants}); save(); renderAll();
   });
 
-  clearExpense.addEventListener('click',()=>{amountInput.value='';participantsDiv.querySelectorAll('input').forEach(cb=>cb.checked=false);});
+  clearExpense.addEventListener('click',()=>{amountInput.value=''; participantsDiv.querySelectorAll('input').forEach(cb=>cb.checked=false);});
 
-  computeTransfer.addEventListener('click',()=>{
-    const g=currentGroup();transferResult.innerHTML='';transferResultInline.innerHTML='';if(!g)return;
-    const selected=transferTo.value; const selName=g.people.find(p=>p.id===selected)?.name||'';
-    let totalSpent={}, totalOwe={}; g.people.forEach(p=>{totalSpent[p.id]=0; totalOwe[p.id]=0;});
-    g.expenses.forEach(ex=>{totalSpent[ex.payer]+=ex.amt; const per=ex.amt/ex.participants.length; ex.participants.forEach(pid=>totalOwe[pid]+=per);});
-    const net={}; g.people.forEach(p=>{net[p.id]=Math.round((totalSpent[p.id]-totalOwe[p.id])*100)/100;});
-    const res=[]; res.push(`All pay to ${selName}`);
-    g.people.forEach(p=>{if(p.id===selected)return; const diff=Math.round((net[p.id]-net[selected])*100)/100; if(diff<0) res.push(`${p.name} pays ₹${Math.abs(diff)} to ${selName}`);});
-    g.people.forEach(p=>{if(p.id===selected)return; const diff=Math.round((net[selected]-net[p.id])*100)/100; if(diff<0) res.push(`${selName} pays ₹${Math.abs(diff)} to ${p.name}`);});
-    transferResult.innerHTML=res.join('<br>'); transferResultInline.innerHTML=transferResult.innerHTML;
+  computeTransfer.addEventListener('click',()=>{computeTransfers();});
+
+  shareBtn.addEventListener('click',()=>{
+    const summaryText=[...transferResultInline.querySelectorAll('div')].map(d=>d.textContent).join('\n');
+    if(navigator.share){navigator.share({title:'Weekend Split',text:summaryText});}
+    else{alert(summaryText);}
   });
 
-  shareBtn.addEventListener('click',()=>{navigator.share?navigator.share({title:'Weekend Split Summary',text:transferResultInline.textContent}):alert('Sharing not supported in this browser.');});
-  copySummary.addEventListener('click',()=>{navigator.clipboard.writeText(summaryDiv.textContent+'\n'+transferResultInline.textContent).then(()=>alert('Copied!'));});
-  resetEntriesBtn.addEventListener('click'=>{if(!confirm('Clear all expenses?'))return;const g=currentGroup();if(!g)return;g.expenses=[];save();renderAll();});
+  copySummary.addEventListener('click',()=>{
+    const text=[...transferResultInline.querySelectorAll('div')].map(d=>d.textContent).join('\n');
+    navigator.clipboard.writeText(text).then(()=>alert('Copied to clipboard'));
+  });
 
-  function openEdit(id){editingId=id;const g=currentGroup();if(!g)return;const ex=g.expenses.find(e=>e.id===id);if(!ex)return;
-    modal.style.display='flex';editPayer.innerHTML='';editCategory.innerHTML='';editParticipants.innerHTML='';
-    g.people.forEach(p=>{const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.name;if(p.id===ex.payer)opt.selected=true;editPayer.appendChild(opt);
-      const lab=document.createElement('div');lab.className='participant-checkbox';lab.innerHTML=`<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
-      if(ex.participants.includes(p.id))lab.querySelector('input').checked=true;lab.addEventListener('click',()=>{const cb=lab.querySelector('input');cb.checked=!cb.checked;});editParticipants.appendChild(lab);});
-    g.categories.forEach(c=>{const opt=document.createElement('option');opt.value=c;opt.textContent=c;if(c===ex.category)opt.selected=true;editCategory.appendChild(opt);});
-    editAmount.value=ex.amt;
-  }
+  resetEntriesBtn.addEventListener('click',()=>{
+    if(!confirm('Reset all expenses?')) return;
+    const g=currentGroup(); if(!g) return; g.expenses=[]; save(); renderAll();
+  });
 
-  closeModal.addEventListener('click',()=>{modal.style.display='none';editingId=null;});
-  applyEdit.addEventListener('click',()=>{const g=currentGroup();if(!g)return;if(!editingId)return;const ex=g.expenses.find(e=>e.id===editingId);if(!ex)return;
-    const payer=editPayer.value,amt=parseFloat(editAmount.value),cat=editCategory.value; if(!payer||isNaN(amt)||amt<=0||!cat)return;
-    const participants=[...editParticipants.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value); if(!participants.length)return;
-    ex.payer=payer; ex.amt=amt; ex.category=cat; ex.participants=participants; save(); renderAll(); modal.style.display='none'; editingId=null;});
-  deleteExpenseBtn.addEventListener('click',()=>{const g=currentGroup();if(!g)return;if(!editingId)return; g.expenses=g.expenses.filter(x=>x.id!==editingId); save(); renderAll(); modal.style.display='none'; editingId=null;});
+  closeModal.addEventListener('click',closeModalFunc);
+  deleteExpenseBtn.addEventListener('click',()=>{
+    const g=currentGroup(); if(!g||!editingId) return; g.expenses=g.expenses.filter(e=>e.id!==editingId); save(); closeModalFunc(); renderAll();
+  });
+
+  applyEdit.addEventListener('click',()=>{
+    const g=currentGroup(); if(!g||!editingId) return;
+    const ex=g.expenses.find(e=>e.id===editingId); if(!ex) return;
+    ex.payer=editPayer.value;
+    ex.amount=Number(editAmount.value);
+    ex.category=editCategory.value;
+    ex.participants=[...editParticipants.querySelectorAll('input:checked')].map(x=>x.value);
+    save(); closeModalFunc(); renderAll();
+  });
 
   renderAll();
 })();
