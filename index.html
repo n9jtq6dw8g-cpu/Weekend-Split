@@ -1,589 +1,522 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spendsplit</title>
+
 <style>
-  :root{
-    --bg:#eef3f7;
-    --card: rgba(255,255,255,0.6);
-    --muted:#6b7280;
-    --accent:#0f1724;
-    --glass-border: rgba(255,255,255,0.6);
-    --glass-shadow: rgba(10,20,30,0.06);
-    --success:#10b981;
-    --danger:#ef4444;
-  }
-  *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,#f7f9fb,#eef3f7);color:var(--accent);-webkit-font-smoothing:antialiased}
-  .app{max-width:980px;margin:18px auto;padding:18px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(180deg,#ffffffcc,#f0f4f9cc);display:flex;align-items:center;justify-content:center;font-weight:800;border:1px solid var(--glass-border);box-shadow:0 6px 18px var(--glass-shadow);backdrop-filter:blur(8px)}
-  h1{margin:0;font-size:20px}
-  nav.tabs{display:flex;gap:8px;margin-bottom:12px}
-  .tab{flex:1;padding:10px 12px;border-radius:12px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.6)}
-  .tab.active{background:#fff;border:1px solid rgba(0,0,0,0.08);box-shadow:0 6px 18px rgba(10,20,30,0.04)}
-  .main { display:grid; grid-template-columns:1fr 420px; gap:16px; align-items:start;}
-  @media(max-width:980px){ .main{ grid-template-columns:1fr } }
-  .card { background: var(--card); border-radius:14px; padding:14px; border:1px solid var(--glass-border); box-shadow:0 8px 30px var(--glass-shadow); backdrop-filter: blur(10px) saturate(120%); }
-  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-  input[type="text"], input[type="number"], select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(15,23,36,0.06);background:rgba(255,255,255,0.7);font-size:14px;outline:none}
-  .row{display:flex;gap:8px}
-  .btn{background:var(--accent);color:#fff;border:none;padding:10px 12px;border-radius:10px;font-weight:600;cursor:pointer}
-  .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(15,23,36,0.06)}
-  .tiny{padding:6px 8px;border-radius:8px;font-size:13px}
-  .muted{color:var(--muted);font-size:13px}
-  .accordion{margin-bottom:8px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.04)}
-  .acc-header{display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.45);cursor:pointer}
-  .acc-body{padding:12px;background:rgba(255,255,255,0.55);display:none}
-  .acc-body.open{display:block}
-  .list-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;margin-bottom:8px;background:linear-gradient(180deg,#ffffff,#fafcff);border:1px solid rgba(0,0,0,0.03)}
-  .person-chip{padding:8px 10px;border-radius:10px;background:linear-gradient(180deg,#ffffffa8,#f3f6f9a8);border:1px solid rgba(255,255,255,0.6);font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(10,20,30,0.03)}
-  .participant-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;border:1px solid rgba(15,23,36,0.04);background:rgba(255,255,255,0.8);cursor:pointer}
-  .expenses-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;max-height:340px;overflow:auto}
-  .expense-item{display:flex;justify-content:space-between;gap:8px;padding:12px;border-radius:10px;background:linear-gradient(180deg,#ffffff,#fafcff);border:1px solid rgba(15,23,36,0.03)}
-  .summary-row{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.6);margin-bottom:8px;border:1px solid rgba(255,255,255,0.6)}
-  .positive{color:var(--success);font-weight:700}
-  .negative{color:var(--danger);font-weight:700}
-  .transfer-rows{margin-top:10px}
-  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
-  .actions-line{display:flex;gap:8px;margin-top:12px}
-  .actions-line button{flex:1}
-  .small-muted{font-size:12px;color:var(--muted)}
-  /* participant checkbox size */
-  .participant-row input[type=checkbox]{width:18px;height:18px;margin:0}
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+        margin: 0;
+        background: #f4f7fb;
+    }
+
+    h2 {
+        margin: 12px 0;
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .tab-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #d0d0d0;
+    }
+
+    .tab {
+        flex: 1;
+        padding: 12px;
+        text-align: center;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .tab.active {
+        background: #e0f0ff;
+        font-weight: 600;
+        border-top: 3px solid #4aa3ff;
+    }
+
+    .screen { display: none; padding: 20px; padding-bottom: 90px; }
+
+    .glass {
+        background: rgba(255,255,255,0.45);
+        backdrop-filter: blur(8px);
+        padding: 15px;
+        margin-bottom: 12px;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    }
+
+    .accordion-header {
+        font-size: 17px;
+        padding: 12px;
+        cursor: pointer;
+        border-radius: 10px;
+        background: #fafafa;
+    }
+
+    .accordion-header.active {
+        background: #e0f0ff;
+        font-weight: 600;
+    }
+
+    .accordion-content {
+        display: none;
+        padding: 12px 8px 4px 8px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px;
+        margin: 6px 0;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 15px;
+    }
+
+    button {
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: none;
+        font-size: 15px;
+        cursor: pointer;
+        margin-top: 6px;
+    }
+
+    .btn {
+        background: #4aa3ff;
+        color: white;
+    }
+
+    .btn.red {
+        background: #ff6b6b;
+    }
+
+    .entry-item, .people-item, .category-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 5px;
+        background: white;
+        border-radius: 8px;
+        margin: 4px 0;
+        cursor: pointer;
+    }
+
+    .checkbox-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .summary-box {
+        background: white;
+        padding: 14px;
+        border-radius: 12px;
+        margin-top: 8px;
+        line-height: 1.45;
+    }
+
+    .action-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
 </style>
 </head>
+
 <body>
-  <div class="app">
-    <header>
-      <div class="brand">
-        <div class="logo">SS</div>
-        <div>
-          <h1>Spendsplit</h1>
-        </div>
-      </div>
-      <!-- small visible mockup preview (optional) -->
-      <div style="display:none">
-        <img src="/mnt/data/A_digital_wireframe_mockup_of_a_mobile_application.png" alt="mock" style="width:120px;height:80px;border-radius:8px">
-      </div>
-    </header>
 
-    <!-- tabs -->
-    <nav class="tabs">
-      <div class="tab active" id="tab-base" onclick="showTab('base')">Base</div>
-      <div class="tab" id="tab-entries" onclick="showTab('entries')">Entries</div>
-      <div class="tab" id="tab-summary" onclick="showTab('summary')">Summary</div>
-    </nav>
+<!-- TITLE -->
+<div style="text-align:center; padding: 15px 0; font-size: 24px; font-weight: 700;">
+    Spendsplit
+</div>
 
-    <div class="main">
-      <!-- Left-column: Base or Entries depending on tab -->
-      <section id="left" >
-        <!-- BASE (Accordion) -->
-        <div id="base" class="card">
-          <!-- Groups accordion -->
-          <div class="accordion">
-            <div class="acc-header" onclick="toggleAcc(this)">
-              <div><strong>Groups</strong></div>
-              <div class="small-muted">Manage</div>
-            </div>
-            <div class="acc-body">
-              <div id="groupList"></div>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <input id="newGroup" placeholder="Add group name" />
-                <button class="btn tiny" onclick="addGroup()">Add</button>
-              </div>
-            </div>
-          </div>
+<!-- BASE TAB -->
+<div id="base" class="screen">
+    <div class="glass">
+        <div class="accordion-header" onclick="toggleAcc(this, 'groupsAcc')">Groups</div>
+        <div id="groupsAcc" class="accordion-content"></div>
 
-          <!-- People accordion -->
-          <div class="accordion">
-            <div class="acc-header" onclick="toggleAcc(this)">
-              <div><strong>People</strong></div>
-              <div class="small-muted">Add / Remove</div>
-            </div>
-            <div class="acc-body">
-              <div id="peopleList"></div>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <input id="newPerson" placeholder="Person name" />
-                <button class="btn tiny" onclick="addPerson()">Add</button>
-              </div>
-            </div>
-          </div>
+        <div class="accordion-header" onclick="toggleAcc(this, 'peopleAcc')">People</div>
+        <div id="peopleAcc" class="accordion-content"></div>
 
-          <!-- Categories accordion -->
-          <div class="accordion">
-            <div class="acc-header" onclick="toggleAcc(this)">
-              <div><strong>Categories</strong></div>
-              <div class="small-muted">Add / Remove</div>
-            </div>
-            <div class="acc-body">
-              <div id="catList"></div>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <input id="newCat" placeholder="Category name" />
-                <button class="btn tiny" onclick="addCategory()">Add</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div class="accordion-header" onclick="toggleAcc(this, 'catAcc')">Categories</div>
+        <div id="catAcc" class="accordion-content"></div>
+    </div>
+</div>
 
-        <!-- ENTRIES -->
-        <div id="entries" class="card" style="margin-top:16px;display:none">
-          <h3>Entries</h3>
+<!-- ENTRIES TAB -->
+<div id="entries" class="screen">
+    <h2>Add Entry</h2>
+    <div class="glass">
 
-          <label>Amount</label>
-          <input id="entryAmount" type="number" min="0" step="1" />
+        <input id="entryName" placeholder="Entry name">
 
-          <label style="margin-top:8px">Payer</label>
-          <select id="entryPayer"></select>
+        <input id="entryAmount" type="number" placeholder="Amount">
 
-          <label style="margin-top:8px">Category</label>
-          <select id="entryCategory"></select>
+        <select id="entryCategory"></select>
 
-          <label style="margin-top:8px">Participants</label>
-          <div id="entryParticipants" style="display:flex;flex-direction:column;gap:8px"></div>
+        <h3>Participants</h3>
+        <div id="participantSelect"></div>
 
-          <div style="display:flex;gap:8px;margin-top:10px">
-            <button class="btn" onclick="saveEntry()">Save</button>
-            <button class="btn ghost" onclick="clearEntry()">Clear</button>
-          </div>
-
-          <div style="margin-top:12px">
-            <div class="small-muted">Entries</div>
-            <div id="entriesList" class="expenses-list"></div>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- Right column: Summary -->
-      <aside>
-        <div id="summaryCard" class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><strong>Summary</strong></div>
-            <div class="small-muted">Local only</div>
-          </div>
-
-          <div id="summaryWrap" style="margin-top:12px">
-            <div class="small-muted">Category totals</div>
-            <div id="categoryTotals" style="margin-top:8px"></div>
-
-            <div style="height:8px"></div>
-
-            <div class="small-muted">Net balances</div>
-            <div id="personTotals" style="margin-top:8px"></div>
-
-            <div style="height:12px"></div>
-
-            <label>Transfer To</label>
-            <select id="collector" style="width:100%;padding:8px;border-radius:8px"></select>
-            <div id="transferInline" style="margin-top:12px"></div>
-
-            <div class="actions-line">
-              <button class="btn ghost" onclick="resetEntries()">Reset Entries</button>
-              <button class="btn" onclick="copySummary()">Copy</button>
-              <button class="btn" id="shareBtn" onclick="shareSummary()">Share</button>
-            </div>
-
-            <div style="height:8px"></div>
-
-            <div style="margin-top:8px" id="transferDetail"></div>
-          </div>
-        </div>
-      </aside>
+        <button class="btn" onclick="addEntry()">Add Entry</button>
     </div>
 
-    <footer style="display:none">Spendsplit</footer>
-  </div>
+    <h2>All Entries</h2>
+    <div id="entriesList"></div>
+</div>
 
-<!-- html2canvas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- SUMMARY TAB -->
+<div id="summary" class="screen">
+    <h2>Summary</h2>
+    <div id="summaryBox" class="summary-box"></div>
+
+    <h3>Transfer To</h3>
+    <select id="transferSelect" onchange="updateSummary()"></select>
+
+    <div class="action-row">
+        <button class="btn" onclick="copySummary()">Copy</button>
+        <button class="btn" onclick="shareSummary()">Share</button>
+        <button class="btn red" onclick="resetEntries()">Reset Entries</button>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+    <div class="tab active" onclick="showTab('base', this)">Base</div>
+    <div class="tab" onclick="showTab('entries', this)">Entries</div>
+    <div class="tab" onclick="showTab('summary', this)">Summary</div>
+</div>
 
 <script>
-(function(){
-  const KEY = 'spendsplit_v_final';
-  const uid = ()=> Math.random().toString(36).slice(2,9);
+/* -----------------------
+   DATA STORAGE
+----------------------- */
 
-  // State: groups array of objects {id,name,people:[],categories:[],entries:[]}
-  let data = { groups: [] };
-  let currentGroupId = null;
+let data = {
+    groups: ["Default"],
+    activeGroup: "Default",
+    people: ["Jack", "Rose"],
+    categories: ["Food", "Entertainment", "Fuel", "Shopping"],
+    entries: []
+};
 
-  // DOM refs
-  const tabs = { base: document.getElementById('tab-base'), entries: document.getElementById('tab-entries'), summary: document.getElementById('tab-summary') };
-  const baseSection = document.getElementById('base');
-  const entriesSection = document.getElementById('entries');
-  const summaryCard = document.getElementById('summaryCard');
+function save() { localStorage.setItem("spendsplit", JSON.stringify(data)); }
+function load() {
+    let d = localStorage.getItem("spendsplit");
+    if (d) data = JSON.parse(d);
+}
+load();
 
-  // load/save
-  function load(){ const s = localStorage.getItem(KEY); if(s){ try{ data = JSON.parse(s); } catch(e){ data = {groups:[]}; } } }
-  function save(){ localStorage.setItem(KEY, JSON.stringify(data)); }
-  load();
 
-  if(!data.groups || !data.groups.length){
-    const gid = uid();
-    data.groups = [{ id:gid, name:'My Group', people:[], categories:['Food','Entertainment','Fuel','Shopping'], entries:[] }];
-    currentGroupId = gid; save();
-  } else {
-    currentGroupId = data.groups[0].id;
-  }
+/* -----------------------
+   UI TAB HANDLING
+----------------------- */
 
-  // Utility
-  function gcur(){ return data.groups.find(g=>g.id===currentGroupId); }
+function showTab(tab, el) {
+    document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+    document.getElementById(tab).style.display = 'block';
 
-  // Tabs
-  function showTab(name){
-    tabs.base.classList.remove('active'); tabs.entries.classList.remove('active'); tabs.summary.classList.remove('active');
-    document.getElementById('base').style.display = name==='base' ? '' : 'none';
-    document.getElementById('entries').style.display = name==='entries' ? '' : 'none';
-    // summary always visible on right; toggle tab styles
-    if(name === 'base') tabs.base.classList.add('active');
-    if(name === 'entries') tabs.entries.classList.add('active');
-    if(name === 'summary') tabs.summary.classList.add('active');
-    // if user clicked summary, highlight summary tab and keep left showing base
-    if(name === 'summary'){ tabs.summary.classList.add('active'); }
-    // render current UI
-    renderAll();
-  }
-  // initialize tab listeners
-  document.getElementById('tab-base').addEventListener('click', ()=> showTab('base'));
-  document.getElementById('tab-entries').addEventListener('click', ()=> showTab('entries'));
-  document.getElementById('tab-summary').addEventListener('click', ()=> showTab('summary'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
 
-  // Accordion toggle
-  window.toggleAcc = function(el){
-    const body = el.nextElementSibling;
-    body.classList.toggle('open');
-  };
+    refreshAll();
+}
 
-  // Groups UI
-  window.addGroup = function(){
-    const name = document.getElementById('newGroup').value.trim();
-    if(!name) return alert('Enter group name');
-    const g = { id: uid(), name, people:[], categories:['Food','Entertainment','Fuel','Shopping'], entries:[] };
-    data.groups.push(g); currentGroupId = g.id; save(); renderAll();
-    document.getElementById('newGroup').value='';
-  };
+document.getElementById("base").style.display = "block";
 
-  function renderGroups(){
-    const wrap = document.getElementById('groupList'); wrap.innerHTML='';
-    data.groups.forEach(g=>{
-      const row = document.createElement('div'); row.className='list-item';
-      row.innerHTML = `<div style="font-weight:700">${g.name}</div>
-                       <div style="display:flex;gap:8px">
-                         <button class="btn tiny" onclick="setActive('${g.id}')">Open</button>
-                         <button class="btn ghost tiny" onclick="deleteGroup('${g.id}')">Delete</button>
-                       </div>`;
-      wrap.appendChild(row);
+
+/* -----------------------
+   ACCORDIONS
+----------------------- */
+
+function toggleAcc(header, id) {
+    header.classList.toggle("active");
+    let box = document.getElementById(id);
+    box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+
+/* -----------------------
+   REFRESH UI
+----------------------- */
+
+function refreshAll() {
+    load();
+    refreshGroups();
+    refreshPeople();
+    refreshCategories();
+    refreshParticipants();
+    refreshEntries();
+    refreshSummary();
+}
+
+
+/* -----------------------
+   GROUPS
+----------------------- */
+
+function refreshGroups() {
+    let box = document.getElementById("groupsAcc");
+    box.innerHTML = `
+        <div><b>Active Group:</b> ${data.activeGroup}</div>
+        <input id="newGroupName" placeholder="New group">
+        <button class="btn" onclick="addGroup()">Add</button>
+    `;
+
+    data.groups.forEach(g => {
+        box.innerHTML += `
+            <div class="people-item">
+                <div>${g}</div>
+                <div>
+                    <button onclick="setGroup('${g}')">Use</button>
+                    <button class="btn red" onclick="removeGroup('${g}')">X</button>
+                </div>
+            </div>
+        `;
     });
-  }
-  window.setActive = function(id){ currentGroupId = id; save(); renderAll(); };
-  window.deleteGroup = function(id){
-    if(!confirm('Delete group?')) return;
-    data.groups = data.groups.filter(x=>x.id!==id);
-    if(data.groups.length===0){
-      const gid = uid(); data.groups.push({id:gid,name:'My Group',people:[],categories:['Food','Entertainment','Fuel','Shopping'],entries:[]});
-    }
-    currentGroupId = data.groups[0].id; save(); renderAll();
-  };
+}
 
-  // People
-  window.addPerson = function(){
-    const name = document.getElementById('newPerson').value.trim();
-    if(!name) return alert('Enter name');
-    const g = gcur(); g.people.push({ id: uid(), name }); save(); document.getElementById('newPerson').value=''; renderAll();
-  };
-  window.removePerson = function(pid){
-    const g = gcur(); const p = g.people.find(x=>x.id===pid);
-    if(!p) return;
-    if(!confirm('Remove '+p.name+'? This removes them from entries.')) return;
-    g.people = g.people.filter(x=>x.id!==pid);
-    g.entries = g.entries.map(e=> ({ ...e, participants: e.participants.filter(id=>id!==pid), payer: e.payer===pid? (g.people[0]?g.people[0].id:null): e.payer })).filter(e=>e.participants && e.participants.length>0);
-    save(); renderAll();
-  };
+function addGroup() {
+    let name = document.getElementById("newGroupName").value.trim();
+    if (!name) return;
+    data.groups.push(name);
+    save(); refreshGroups();
+}
 
-  // Categories
-  window.addCategory = function(){
-    const name = document.getElementById('newCat').value.trim();
-    if(!name) return alert('Enter category');
-    const g = gcur(); if(g.categories.includes(name)) return alert('Category exists');
-    g.categories.push(name); save(); document.getElementById('newCat').value=''; renderAll();
-  };
-  window.removeCategory = function(cat){
-    const g = gcur();
-    if(g.categories.length<=1) return alert('At least one category required');
-    if(!confirm('Remove category "'+cat+'"?')) return;
-    g.categories = g.categories.filter(c=>c!==cat);
-    save(); renderAll();
-  };
+function setGroup(g) { data.activeGroup = g; save(); refreshGroups(); refreshEntries(); refreshSummary(); }
 
-  // Entries
-  function renderParticipantsForEntry(){
-    const container = document.getElementById('entryParticipants'); container.innerHTML='';
-    const g = gcur(); if(!g) return;
-    g.people.forEach(p=>{
-      const row = document.createElement('div'); row.className='participant-row';
-      row.innerHTML = `<label><input type="checkbox" value="${p.id}"> ${p.name}</label>`;
-      // click toggles checkbox
-      row.addEventListener('click', (ev)=>{ if(ev.target.tagName === 'INPUT') return; const cb = row.querySelector('input[type=checkbox]'); cb.checked = !cb.checked; });
-      container.appendChild(row);
+function removeGroup(g) {
+    data.groups = data.groups.filter(x => x !== g);
+    if (data.activeGroup === g) data.activeGroup = data.groups[0] || "Default";
+    save(); refreshGroups();
+}
+
+
+/* -----------------------
+   PEOPLE
+----------------------- */
+
+function refreshPeople() {
+    let box = document.getElementById("peopleAcc");
+    box.innerHTML = `
+        <input id="newPerson" placeholder="New person">
+        <button class="btn" onclick="addPerson()">Add</button>
+    `;
+
+    data.people.forEach(p => {
+        box.innerHTML += `
+            <div class="people-item">
+                <div>${p}</div>
+                <button class="btn red" onclick="removePerson('${p}')">X</button>
+            </div>
+        `;
     });
-  }
+}
 
-  window.saveEntry = function(){
-    const g = gcur(); if(!g) return;
-    const amt = Math.round(Number(document.getElementById('entryAmount').value || 0));
-    const payer = document.getElementById('entryPayer').value;
-    const category = document.getElementById('entryCategory').value;
-    const parts = Array.from(document.querySelectorAll('#entryParticipants input[type=checkbox]')).filter(cb=>cb.checked).map(cb=>cb.value);
-    if(!amt || !payer || parts.length===0) return alert('Fill amount, payer and participants');
-    const ex = { id: uid(), payer, amt, participants: parts, category, ts: Date.now() };
-    g.entries.push(ex); save(); clearEntry(); renderAll();
-  };
-  window.clearEntry = function(){ document.getElementById('entryAmount').value=''; document.querySelectorAll('#entryParticipants input[type=checkbox]').forEach(cb=>cb.checked=false); };
+function addPerson() {
+    let n = document.getElementById("newPerson").value.trim();
+    if (!n) return;
+    data.people.push(n);
+    save(); refreshPeople(); refreshParticipants();
+}
 
-  window.editEntry = function(eid){
-    const g = gcur(); const ex = g.entries.find(x=>x.id===eid); if(!ex) return;
-    const newAmt = prompt('Edit amount', ex.amt); if(newAmt===null) return;
-    ex.amt = Math.round(Number(newAmt)||ex.amt); save(); renderAll();
-  };
-  window.deleteEntry = function(eid){
-    if(!confirm('Delete entry?')) return;
-    const g = gcur(); g.entries = g.entries.filter(x=>x.id!==eid); save(); renderAll();
-  };
+function removePerson(n) {
+    data.people = data.people.filter(x => x !== n);
+    save(); refreshPeople(); refreshParticipants();
+}
 
-  // Summary calculations
-  function computeBalances(){
-    const g = gcur(); const bal = {}; if(!g) return bal;
-    g.people.forEach(p=> bal[p.id]=0);
-    g.entries.forEach(e=>{
-      const n = e.participants.length;
-      const base = Math.floor(e.amt / n);
-      let rem = e.amt - base*n;
-      e.participants.forEach(pid=>{
-        const share = base + (rem>0?1:0); if(rem>0) rem--;
-        bal[pid] = (bal[pid] || 0) - share;
-      });
-      bal[e.payer] = (bal[e.payer] || 0) + e.amt;
+
+/* -----------------------
+   CATEGORIES
+----------------------- */
+
+function refreshCategories() {
+    let box = document.getElementById("catAcc");
+
+    box.innerHTML = `
+        <input id="newCat" placeholder="New category">
+        <button class="btn" onclick="addCategory()">Add</button>
+    `;
+
+    data.categories.forEach(c => {
+        box.innerHTML += `
+            <div class="category-item">
+                <div>${c}</div>
+                <button class="btn red" onclick="removeCategory('${c}')">X</button>
+            </div>
+        `;
     });
-    Object.keys(bal).forEach(k=> bal[k] = Math.round(bal[k]));
-    return bal;
-  }
-  function computeCategoryTotals(){
-    const g = gcur(); const ct = {}; if(!g) return ct;
-    g.categories.forEach(c=> ct[c]=0);
-    g.entries.forEach(e=> { ct[e.category] = (ct[e.category]||0) + e.amt; });
-    return ct;
-  }
 
-  // Transfer-to logic (Option A)
-  function computeTransferOps(collectorId){
-    const g = gcur(); const bal = computeBalances();
-    const creditors = [], debtors = [];
-    for(const pid in bal){ const v = bal[pid]; if(v>0) creditors.push({id:pid,amt:v}); else if(v<0) debtors.push({id:pid,amt:-v}); }
-    const ops = []; let totalToReceive = 0;
-    debtors.forEach(d=>{ if(d.id===collectorId) return; ops.push({from:d.id,to:collectorId,amt:d.amt}); totalToReceive += d.amt; });
-    const collectorInitial = bal[collectorId]||0;
-    const collectorAfter = collectorInitial + totalToReceive;
-    const otherCreds = creditors.filter(c=>c.id!==collectorId).map(c=>({...c}));
-    let rem = collectorAfter;
-    otherCreds.forEach(c=>{ if(rem<=0) return; const pay = Math.min(rem, c.amt); if(pay>0){ ops.push({from:collectorId,to:c.id,amt:pay}); rem -= pay; } });
-    return ops;
-  }
+    document.getElementById("entryCategory").innerHTML =
+        data.categories.map(c => `<option>${c}</option>`).join("");
+}
 
-  // Renderers
-  function renderAll(){
-    renderGroups(); renderPeople(); renderCategories();
-    renderParticipantsForEntry(); renderEntryLists(); renderSummary(); renderCollectorList();
+function addCategory() {
+    let c = document.getElementById("newCat").value.trim();
+    if (!c) return;
+    data.categories.push(c);
+    save(); refreshCategories();
+}
+
+function removeCategory(c) {
+    data.categories = data.categories.filter(x => x !== c);
+    save(); refreshCategories();
+}
+
+
+/* -----------------------
+   PARTICIPANT SELECTOR
+----------------------- */
+
+function refreshParticipants() {
+    let box = document.getElementById("participantSelect");
+    box.innerHTML = "";
+    data.people.forEach(p => {
+        let id = "chk_" + p;
+        box.innerHTML += `
+            <div class="entry-item" onclick="toggleCheck('${id}')">
+                <div class="checkbox-left">
+                    <input type="checkbox" id="${id}">
+                    <span>${p}</span>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function toggleCheck(id) {
+    let c = document.getElementById(id);
+    c.checked = !c.checked;
+}
+
+
+/* -----------------------
+   ADD ENTRY
+----------------------- */
+
+function addEntry() {
+    let name = document.getElementById("entryName").value.trim();
+    let amt = parseInt(document.getElementById("entryAmount").value);
+    let category = document.getElementById("entryCategory").value;
+
+    let ppl = data.people.filter(p => document.getElementById("chk_" + p).checked);
+
+    if (!name || !amt || ppl.length === 0) return;
+
+    data.entries.push({
+        group: data.activeGroup,
+        name,
+        amount: Math.round(amt),
+        category,
+        people: ppl
+    });
+
     save();
-  }
+    refreshEntries();
+    refreshSummary();
+}
 
-  function renderGroups(){
-    const wrap = document.getElementById('groupList'); wrap.innerHTML='';
-    data.groups.forEach(g=>{
-      const div = document.createElement('div'); div.className='list-item';
-      div.innerHTML = `<div style="font-weight:700">${g.name}</div>
-        <div style="display:flex;gap:8px">
-          <button class="btn tiny" onclick="setActive('${g.id}')">Open</button>
-          <button class="btn ghost tiny" onclick="deleteGroup('${g.id}')">Delete</button>
-        </div>`;
-      wrap.appendChild(div);
+
+/* -----------------------
+   ENTRIES DISPLAY
+----------------------- */
+
+function refreshEntries() {
+    let list = document.getElementById("entriesList");
+    list.innerHTML = "";
+
+    data.entries
+        .filter(e => e.group === data.activeGroup)
+        .forEach((e, i) => {
+            list.innerHTML += `
+                <div class="entry-item">
+                    <div>${e.name} — ₹${e.amount}</div>
+                    <button class="btn red" onclick="deleteEntry(${i})">X</button>
+                </div>
+            `;
+        });
+}
+
+function deleteEntry(i) {
+    data.entries.splice(i, 1);
+    save(); refreshEntries(); refreshSummary();
+}
+
+
+/* -----------------------
+   SUMMARY + TRANSFER
+----------------------- */
+
+function refreshSummary() { updateSummary(); }
+
+function updateSummary() {
+    let box = document.getElementById("summaryBox");
+    let groupEntries = data.entries.filter(e => e.group === data.activeGroup);
+
+    if (groupEntries.length === 0) {
+        box.innerHTML = "No entries.";
+        return;
+    }
+
+    // per-person
+    let totals = {};
+    data.people.forEach(p => totals[p] = 0);
+
+    groupEntries.forEach(e => {
+        let share = Math.round(e.amount / e.people.length);
+        e.people.forEach(p => totals[p] += share);
     });
-  }
 
-  function renderPeople(){
-    const wrap = document.getElementById('peopleList'); wrap.innerHTML='';
-    const g = gcur(); if(!g) return;
-    g.people.forEach(p=>{
-      const div = document.createElement('div'); div.className='list-item';
-      div.innerHTML = `<div>${p.name}</div><div style="display:flex;gap:8px">
-                        <button class="btn ghost tiny" onclick="removePerson('${p.id}')">Remove</button></div>`;
-      wrap.appendChild(div);
+    // UI
+    let html = "<b>Totals:</b><br>";
+    data.people.forEach(p => html += `${p}: ₹${totals[p]}<br>`);
+
+    let payer = document.getElementById("transferSelect").value || data.people[0];
+
+    if (!document.getElementById("transferSelect").value) {
+        document.getElementById("transferSelect").innerHTML =
+            data.people.map(p => `<option>${p}</option>`).join("");
+    }
+
+    // transfer logic
+    let owes = totals[payer];
+    let result = `<br><b>Transfer:</b><br>Everyone pays to ${payer}.<br>`;
+
+    data.people.forEach(p => {
+        if (p !== payer && totals[p] > totals[payer]) {
+            let diff = totals[p] - totals[payer];
+            if (diff > 0) result += `${payer} pays ₹${diff} to ${p}<br>`;
+        }
     });
-    // populate payer select in entries
-    const payerSel = document.getElementById('entryPayer'); payerSel.innerHTML='';
-    g.people.forEach(p=> payerSel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
-  }
 
-  function renderCategories(){
-    const wrap = document.getElementById('catList'); wrap.innerHTML='';
-    const g = gcur(); if(!g) return;
-    g.categories.forEach(c=>{
-      const div = document.createElement('div'); div.className='list-item';
-      div.innerHTML = `<div>${c}</div><div><button class="btn ghost tiny" onclick="removeCategory('${c}')">Remove</button></div>`;
-      wrap.appendChild(div);
-    });
-    const catSel = document.getElementById('entryCategory'); catSel.innerHTML='';
-    g.categories.forEach(c=> catSel.innerHTML += `<option value="${c}">${c}</option>`);
-  }
+    box.innerHTML = html + result;
+}
 
-  function renderEntryLists(){
-    const g = gcur();
-    const list = document.getElementById('entriesList'); list.innerHTML='';
-    if(!g) return;
-    g.entries.slice().reverse().forEach(e=>{
-      const row = document.createElement('div'); row.className='expense-item';
-      const payerName = (g.people.find(p=>p.id===e.payer)||{}).name || 'Unknown';
-      const parts = e.participants.map(id=> (g.people.find(p=>p.id===id)||{}).name || '?').join(', ');
-      row.innerHTML = `<div>
-        <div style="font-weight:700">${e.category} • ₹${e.amt}</div>
-        <div class="small-muted">${payerName} paid — ${parts}</div>
-        <div class="small-muted">${new Date(e.ts||Date.now()).toLocaleString()}</div>
-      </div>`;
-      const actions = document.createElement('div'); actions.style.display='flex'; actions.style.flexDirection='column'; actions.style.gap='8px';
-      const edit = document.createElement('button'); edit.className='tiny btn ghost'; edit.textContent='Edit'; edit.onclick = ()=> editEntry(e.id);
-      const del = document.createElement('button'); del.className='tiny btn ghost'; del.textContent='Delete'; del.onclick = ()=> deleteEntry(e.id);
-      actions.appendChild(edit); actions.appendChild(del); row.appendChild(actions);
-      list.appendChild(row);
-    });
-    document.getElementById('expCount') && (document.getElementById('expCount').textContent = g.entries.length + ' items');
-  }
+function copySummary() {
+    navigator.clipboard.writeText(document.getElementById("summaryBox").innerText);
+}
 
-  function renderSummary(){
-    const g = gcur(); if(!g) return;
-    const ct = computeCategoryTotals();
-    const categoryTotalsDiv = document.getElementById('categoryTotals'); categoryTotalsDiv.innerHTML='';
-    Object.keys(ct).forEach(c=>{
-      const r = document.createElement('div'); r.className='summary-row'; r.innerHTML = `<div>${c}</div><div class="muted">₹${ct[c]||0}</div>`; categoryTotalsDiv.appendChild(r);
-    });
-    const bal = computeBalances();
-    const personTotalsDiv = document.getElementById('personTotals'); personTotalsDiv.innerHTML='';
-    g.people.map(p=>({id:p.id,name:p.name,amt:bal[p.id]||0})).sort((a,b)=>b.amt-a.amt).forEach(it=>{
-      const r = document.createElement('div'); r.className='summary-row';
-      r.innerHTML = `<div><strong>${it.name}</strong><div class="small-muted">Net</div></div><div class="${it.amt>=0?'positive':'negative'}">₹${Math.abs(it.amt)}</div>`;
-      personTotalsDiv.appendChild(r);
-    });
-    // inline transfer text (update when collector selected)
-    updateTransferInline();
-  }
+async function shareSummary() {
+    let text = document.getElementById("summaryBox").innerText;
+    if (navigator.share) navigator.share({ text });
+}
 
-  function renderCollectorList(){
-    const sel = document.getElementById('collector'); sel.innerHTML='';
-    const g = gcur(); if(!g) return;
-    g.people.forEach(p=> sel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
-  }
+function resetEntries() {
+    data.entries = data.entries.filter(e => e.group !== data.activeGroup);
+    save();
+    refreshEntries();
+    refreshSummary();
+}
 
-  function updateTransferInline(){
-    const g = gcur(); const collectorId = document.getElementById('collector').value; const inline = document.getElementById('transferInline'); inline.innerHTML='';
-    if(!g || !collectorId){ inline.innerHTML = '<div class="small-muted">Select collector and click compute below</div>'; return; }
-    const ops = computeTransferOps(collectorId);
-    if(!ops.length){ inline.innerHTML = '<div class="small-muted">Nothing to transfer — settled</div>'; return; }
-    // aggregate and sentences
-    const agg = {};
-    ops.forEach(o=>{ const k=o.from+'|'+o.to; agg[k] = (agg[k]||0)+o.amt; });
-    const map = {}; g.people.forEach(p=> map[p.id]=p.name);
-    // show rows
-    Object.keys(agg).forEach(k=>{ const [from,to]=k.split('|'); const amt = agg[k]; const row = document.createElement('div'); row.className='summary-row'; row.innerHTML=`<div>${map[from]||'?'} → ${map[to]||'?'}</div><div class="muted">₹${amt}</div>`; inline.appendChild(row); });
-    // sentences: Everyone pays collector, collector forwards
-    const totalsByReceiver = {};
-    Object.keys(agg).forEach(k=>{ const to = k.split('|')[1]; totalsByReceiver[to] = (totalsByReceiver[to]||0) + agg[k]; });
-    let collector = null, maxv=0; Object.keys(totalsByReceiver).forEach(r=>{ if(totalsByReceiver[r]>maxv){ maxv=totalsByReceiver[r]; collector=r; } });
-    const sentences = [];
-    if(collector) sentences.push(`Everyone pays ${map[collector]}.`);
-    Object.keys(agg).forEach(k=>{ const [from,to]=k.split('|'); const amt=agg[k]; if(from===collector && to!==collector) sentences.push(`${map[collector]} transfers ₹${amt} to ${map[to]}.`); });
-    if(sentences.length){ const sb=document.createElement('div'); sb.style.marginTop='8px'; sentences.forEach(s=>{ const p=document.createElement('div'); p.textContent=s; sb.appendChild(p); }); inline.appendChild(sb); }
-  }
-
-  // compute transfer detail on right panel (detailed rows)
-  function renderTransferDetail(ops){
-    const g = gcur(); const map={}; g.people.forEach(p=>map[p.id]=p.name);
-    const detail = document.getElementById('transferDetail'); detail.innerHTML='';
-    if(!ops.length) { detail.innerHTML = '<div class="small-muted">No transfers</div>'; return; }
-    const agg = {}; ops.forEach(o=>{ const k=o.from+'|'+o.to; agg[k] = (agg[k]||0) + o.amt; });
-    Object.keys(agg).forEach(k=>{ const [from,to]=k.split('|'); const amt=agg[k]; const r = document.createElement('div'); r.className='summary-row'; r.innerHTML = `<div>${map[from]||'?'} → ${map[to]||'?'}</div><div class="muted">₹${amt}</div>`; detail.appendChild(r); });
-  }
-
-  // actions used by UI
-  window.setActive = function(id){ currentGroupId = id; renderAll(); save(); };
-  window.deleteGroup = function(id){ if(!confirm('Delete group?')) return; data.groups = data.groups.filter(g=>g.id!==id); if(data.groups.length===0){ const gid=uid(); data.groups.push({id:gid,name:'My Group',people:[],categories:['Food','Entertainment','Fuel','Shopping'],entries:[]}); } currentGroupId = data.groups[0].id; save(); renderAll(); };
-
-  window.removePerson = removePerson;
-  function removePerson(pid){ const g = gcur(); const p = g.people.find(x=>x.id===pid); if(!p) return; if(!confirm('Remove '+p.name+'?')) return; g.people = g.people.filter(x=>x.id!==pid); g.entries = g.entries.map(e=>({...e,participants:e.participants.filter(id=>id!==pid),payer:e.payer===pid? (g.people[0]?g.people[0].id:null):e.payer })).filter(e=>e.participants && e.participants.length>0); save(); renderAll(); }
-
-  window.removeCategory = removeCategory;
-  function removeCategory(cat){ const g = gcur(); if(g.categories.length<=1) return alert('At least one category required'); if(!confirm('Remove '+cat+'?')) return; g.categories = g.categories.filter(c=>c!==cat); save(); renderAll(); }
-
-  // entry editing/wrappers for buttons
-  window.editEntry = function(id){ const g=gcur(); const e = g.entries.find(x=>x.id===id); if(!e) return; const na = prompt('New amount', e.amt); if(na===null) return; e.amt = Math.round(Number(na)||e.amt); save(); renderAll(); };
-  window.deleteEntry = function(id){ if(!confirm('Delete entry?')) return; const g=gcur(); g.entries = g.entries.filter(x=>x.id!==id); save(); renderAll(); };
-
-  // compute transfer ops and update UI when compute button clicked
-  document.getElementById('shareBtn').addEventListener('click', shareSummary);
-
-  // compute transfer when user selects collector and clicks compute - we will add compute action to selection change
-  document.getElementById('collector').addEventListener('change', ()=> updateTransferInline());
-
-  // compute detailed transfer on demand (we show both inline and detail when user clicks compute)
-  function computeAndShow(){
-    const coll = document.getElementById('collector').value; if(!coll) return alert('Select collector');
-    const ops = computeTransferOps(coll);
-    renderTransferDetail(ops);
-    updateTransferInline(); // inline sentences
-  }
-  // Add a compute button area
-  (function addComputeBtn(){
-    const node = document.createElement('div'); node.style.marginTop='10px';
-    const b = document.createElement('button'); b.className='btn tiny'; b.textContent='Compute Transfers'; b.onclick=computeAndShow;
-    node.appendChild(b); document.getElementById('collector').parentNode.appendChild(node);
-  })();
-
-  // Share summary (PNG of summaryWrap)
-  window.shareSummary = async function(){
-    const wrap = document.getElementById('summaryWrap');
-    if(!wrap) return;
-    const old = wrap.style.background; wrap.style.background = '#ffffff';
-    try{
-      const canvas = await html2canvas(wrap, {backgroundColor:null, scale: window.devicePixelRatio||2});
-      const blob = await new Promise(r=>canvas.toBlob(r,'image/png'));
-      const file = new File([blob],'spendsplit-summary.png',{type:'image/png'});
-      if(navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({ files:[file], title:'Spendsplit Summary' }).catch(()=>{});
-      } else {
-        const url = URL.createObjectURL(blob); window.open(url,'_blank');
-      }
-    }catch(e){ console.error(e); alert('Could not create image'); }
-    finally{ wrap.style.background = old; }
-  };
-
-  window.copySummary = function(){
-    const wrap = document.getElementById('summaryWrap'); navigator.clipboard.writeText(wrap.innerText).then(()=> alert('Summary copied'));
-  };
-
-  window.resetEntries = function(){
-    const g = gcur(); if(!confirm('Clear all entries for this group?')) return; g.entries = []; save(); renderAll();
-  };
-
-  // initial render helpers
-  function renderAll(){
-    renderGroups(); renderPeople(); renderCategories(); renderParticipantsForEntry(); renderEntryLists(); renderSummary(); renderCollectorList();
-  }
-  renderAll();
-
-  // save on exit
-  window.addEventListener('beforeunload', ()=> save());
-
-})();
+refreshAll();
 </script>
+
 </body>
 </html>
